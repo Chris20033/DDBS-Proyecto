@@ -1,35 +1,222 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import Aside from "./components/Aside";
+import Header from "./components/Header";
+import { useEffect, useState } from "react";
+import { Route, Routes } from "react-router-dom";
+import Inicio from "./pages/Inicio";
+import Comprar from "./pages/Comprar";
+import Pedidos from "./pages/Pedidos";
+import Paquetes from "./pages/Paquetes";
+import Administrador from "./pages/Administrador";
+import Error from "./pages/Error";
+import LayoutPublic from "./Layout/LayoutPublic";
 
-function App() {
-  const [count, setCount] = useState(0)
+const initialUsers = [
+    {
+        id: 1,
+        nombre: "John",
+        apellido: "Doe",
+        correo: "JohnDoe@gmail.com",
+        telefono: "1234567890",
+        contrasena: "password",
+        rol: "admin",
+    },
+    {
+        id: 2,
+        nombre: "Jane",
+        apellido: "Doe",
+        correo: "JaneDoe@hotmail.com",
+        telefono: "0987654321",
+        contrasena: "password",
+        rol: "cliente",
+    },
+    {
+        id: 3,
+        nombre: "Alice",
+        apellido: "Smith",
+        correo: "AliceSmith@gmail.com",
+        telefono: "1122334455",
+        contrasena: "password",
+        rol: "admin",
+    },
+    {
+        id: 4,
+        nombre: "Bob",
+        apellido: "Johnson",
+        correo: "BobJohnson@gmail.com",
+        telefono: "5566778899",
+        contrasena: "password",
+        rol: "cliente",
+    },
+    {
+        id: 5,
+        nombre: "Charlie",
+        apellido: "Brown",
+        correo: "CharlieBrown@yahoo.com",
+        telefono: "9988776655",
+        contrasena: "password",
+        rol: "admin",
+    },
+    {
+        id: 6,
+        nombre: "David",
+        apellido: "Wilson",
+        correo: "si@gmail.com",
+        telefono: "1231231234",
+        contrasena: "12345",
+        rol: "admin",
+    },
+    {
+        id: 7,
+        nombre: "Eve",
+        apellido: "Davis",
+        correo: "no@gmail.com",
+        telefono: "4564564567",
+        contrasena: "12345",
+        rol: "cliente",
+    },
+];
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+const initialRestaurante = [
+    {
+        id: 1,
+        nombre: "Restaurante 1",
+        direccion: "Calle 123",
+        latitud: 12.345678,
+        longitud: 98.765432,
+        google_place_id: "ChIJN1t_tDeuEmsR8j0v2c3g4",
+        rating_google: 4.5,
+        admin_restaurante_id: 1,
+    },
+    {
+        id: 2,
+        nombre: "Restaurante 2",
+        direccion: "Calle 456",
+        latitud: 23.456789,
+        longitud: 87.654321,
+        google_place_id: "ChIJN1t_tDeuEmsR8j0v2c3g4",
+        rating_google: 4.0,
+        admin_restaurante_id: 2,
+    },
+    {
+        id: 3,
+        nombre: "Restaurante 3",
+        direccion: "Calle 789",
+        latitud: 34.56789,
+        longitud: 76.54321,
+        google_place_id: "ChIJN1t_tDeuEmsR8j0v2c3g4",
+        rating_google: 3.5,
+        admin_restaurante_id: 3,
+    },
+];
 
-export default App
+const initialPaquetes = [
+    {
+        id: 1,
+        nombre_paquete: "Paquete 1",
+        descripcion: "Descripción del paquete 1",
+        imagen: "images/paquete1.jpg",
+        precio: 100,
+        stock: 10,
+        fecha_vencimiento: "2023-12-31",
+        restaurante_id: 1,
+    },
+    {
+        id: 2,
+        nombre_paquete: "Paquete 2",
+        descripcion: "Descripción del paquete 2",
+        imagen: "images/paquete2.jpg",
+        precio: 200,
+        stock: 5,
+        fecha_vencimiento: "2023-11-30",
+        restaurante_id: 2,
+    },
+    {
+        id: 3,
+        nombre_paquete: "Paquete 3",
+        descripcion: "Descripción del paquete 3",
+        imagen: "images/paquete3.jpg",
+        precio: 150,
+        stock: 8,
+        fecha_vencimiento: "2023-10-31",
+        restaurante_id: 3,
+    },
+];
+
+const App = () => {
+    const [login, setLogin] = useState(false); //verificar si el usuario esta logueado o no
+
+    const [users, setUsers] = useState(initialUsers); //tiene la lista de usuarios
+
+    const [restaurante, setRestaurante] = useState(initialRestaurante); // tiene la lista de restaurantes
+
+    const [paquetes, setPaquetes] = useState(initialPaquetes); // tiene la lista de paquetes
+
+    const [userLogin, setUserLogin] = useState({
+        // informacion del usuario logueado
+        id: "",
+        nombre: "",
+        apellido: "",
+        email: "",
+        password: "",
+        rol: "cliente",
+        telefono: "",
+    });
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUserLogin(parsedUser);
+            setLogin(true);
+        }
+    }, []);
+
+    const asideOptions = [
+        // opciones del aside
+        { id: 1, nombre: "Inicio", rol: "cliente" },
+        { id: 2, nombre: "Comprar", rol: "cliente" },
+        { id: 3, nombre: "Paquetes", rol: "cliente" },
+        { id: 4, nombre: "Pedidos", rol: "cliente" },
+        { id: 5, nombre: "Administrador", rol: "admin" },
+    ];
+
+    return (
+        <div
+            id="main"
+            className="bg-[url(images/Fondo.png)] min-h-screen w-full"
+        >
+            <Header
+                users={users}
+                userLogin={userLogin}
+                setUserLogin={setUserLogin}
+                login={login}
+                setLogin={setLogin}
+            />
+            <Aside asideOptions={asideOptions} userLogin={userLogin} />
+
+            <div
+                id="content"
+                className="flex flex-col items-center justify-center"
+            >
+                <Routes>
+                    <Route path="/" element={<LayoutPublic />}>
+                        <Route element={<Inicio />} path="/inicio" index></Route>
+                        <Route element={<Comprar/>} path="/comprar"></Route>
+                        <Route element={<Paquetes />} path="/paquetes"></Route>
+                        <Route element={<Pedidos />} path="/pedidos"></Route>
+                        <Route element={<Administrador />} path="/administrador"></Route>
+                        <Route element={<Error />} path="*"></Route>
+                    </Route>
+                </Routes>
+            </div>
+
+            <footer id="footer">
+                <div className="bg-[#4ed89f] h-24 pl-10 pr-10 shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                    <p className="text-center text-white">Footer Content</p>
+                </div>
+            </footer>
+        </div>
+    );
+};
+
+export default App;
