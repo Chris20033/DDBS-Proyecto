@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 
 const Header = ({ users, login, setLogin, userLogin, setUserLogin }) => {
     const [clicked, setClicked] = useState(false); //verifica si se dio click en el icono de usuario
@@ -51,6 +52,7 @@ const Header = ({ users, login, setLogin, userLogin, setUserLogin }) => {
 
     const handleLogout = () => {
         setLogin(false);
+        setClicked(false);
         setUserLogin([]);
         localStorage.removeItem("user");
     };
@@ -66,31 +68,49 @@ const Header = ({ users, login, setLogin, userLogin, setUserLogin }) => {
     return (
         <div
             id="header"
-            className="flex justify-between items-center bg-[#4ed89f] h-24 pl-10 pr-10 shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+            className="flex justify-between items-center bg-[#4ed89f] h-24 pl-10 pr-10 shadow-[0_4px_8px_rgba(0,0,0,0.5)] w-full"
         >
-            <img src="images/logo.png" alt="" className="h-28 w-auto" />
-            
+            <NavLink to="/">
+                <img src="images/logo.png" alt="" className="h-28 w-auto" />
+            </NavLink>
+
             <div className="w-[50%]">
                 <input
                     type="text"
                     placeholder="Buscar..."
-                    className="bg-[#117449] text-white w-[80%] rounded-2xl p-3"
+                    className="bg-[#117449] text-white w-[94%] rounded-2xl p-3"
                 />
-                <button className="bg-[#117449] w-[5%] h-full text-white rounded-2xl p-3 ml-2 cursor-pointer">🔎</button>
+                <button className="bg-[#117449] w-[5%] h-full text-white rounded-2xl p-3 ml-2 cursor-pointer">
+                    🔎
+                </button>
             </div>
-            <a
-                onClick={() => setClicked(!clicked)}
-                className="flex flex-col justify-center items-center cursor-pointer relative"
-            >
-                <img src="images/usr.webp" alt="" className="h-12 w-auto" />
-                {!login ? (
-                    <h1 className="text-white font-bold text-[20px]">Login</h1>
-                ) : (
-                    <h1 className="text-white font-bold text-[20px]">
-                        {nombre}
-                    </h1>
+
+            <div className="flex justify-center items-center gap-4">
+                {!login && (
+                    <NavLink
+                        className="p-2 rounded-md text-white font-bold text-[20px] hover:bg-[#117449]"
+                        to="/registro"
+                    >
+                        Registrate
+                    </NavLink>
                 )}
-            </a>
+
+                <a
+                    onClick={() => setClicked(!clicked)}
+                    className="flex flex-col justify-center items-center cursor-pointer relative hover:bg-[#117449] p-2 rounded-md"
+                >
+                    <img src="images/usr.webp" alt="" className="h-12 w-auto" />
+                    {!login ? (
+                        <h1 className="text-white font-bold text-[20px]">
+                            Login
+                        </h1>
+                    ) : (
+                        <h1 className="text-white font-bold text-[20px]">
+                            {nombre}
+                        </h1>
+                    )}
+                </a>
+            </div>
 
             {clicked && (
                 <div className="absolute top-20 right-2 bg-white shadow-lg rounded-lg p-4 mt-2">

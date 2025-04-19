@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
 #main {
     display: grid;
     grid-template-areas:
         "header header header"
         "sidebar content content"
         "sidebar content content"
-        "footer footer footer";
+        "sidebar footer footer";
     grid-template-columns: 1fr 9fr;
     grid-template-rows: auto 1fr 1fr auto;
     min-height: 100vh;
@@ -14,14 +20,28 @@
 
 #content {
     grid-area: content;
+    overflow-y: auto;
+    padding-top: 96px; 
+    padding-bottom: 20px;
 }
 
 #header {
     grid-area: header;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50; 
 }
 
 #aside {
     grid-area: sidebar;
+    position: fixed;
+    top: 96px; /* Ajusta esto según la altura de tu header (h-24 = 96px) */
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: 40;
 }
 
 #footer {
