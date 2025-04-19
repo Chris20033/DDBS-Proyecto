@@ -3,7 +3,7 @@ import Header from "./components/Header";
 import { useEffect, useState } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import Inicio from "./pages/Inicio";
-import Comprar from "./pages/Comprar";
+import Restaurantes from "./pages/Restaurantes";
 import Pedidos from "./pages/Pedidos";
 import Paquetes from "./pages/Paquetes";
 import Administrador from "./pages/Administrador";
@@ -145,6 +145,9 @@ const initialPaquetes = [
 ];
 
 const App = () => {
+
+    const server = "http://192.168.0.186:3001"
+
     const [login, setLogin] = useState(false); //verificar si el usuario esta logueado o no
 
     const [users, setUsers] = useState(); //tiene la lista de usuarios
@@ -174,7 +177,7 @@ const App = () => {
         }
     
         // Obtener usuarios
-        axios.get("http://192.168.0.185:3001/usuarios")
+        axios.get(`${server}/usuarios`)
             .then((response) => {
                 setUsers(response.data);
                 console.log("Usuarios:", response.data);
@@ -184,7 +187,7 @@ const App = () => {
             });
     
         // Obtener paquetes
-        axios.get("http://192.168.0.185:3001/paquetes")
+        axios.get(`${server}/paquetes`)
             .then((response) => {
                 setPaquetes(response.data);
                 console.log("Paquetes:", response.data);
@@ -194,7 +197,7 @@ const App = () => {
             });
     
         // Obtener restaurantes
-        axios.get("http://192.168.0.185:3001/restaurantes")
+        axios.get(`${server}/restaurantes`)
             .then((response) => {
                 setRestaurante(response.data);
                 console.log("Restaurantes:", response.data);
@@ -208,7 +211,7 @@ const App = () => {
     const asideOptions = [
         // opciones del aside
         { id: 1, nombre: "Inicio", rol: "cliente" },
-        { id: 2, nombre: "Comprar", rol: "cliente" },
+        { id: 2, nombre: "Restaurantes", rol: "cliente" },
         { id: 3, nombre: "Paquetes", rol: "cliente" },
         { id: 4, nombre: "Pedidos", rol: "cliente" },
         { id: 5, nombre: "Administrador", rol: "admin" },
@@ -238,11 +241,11 @@ const App = () => {
                         />
                         <Route element={<Inicio />} path="/inicio"></Route>
                         <Route
-                            element={<Comprar login={login} />}
-                            path="/comprar"
+                            element={<Restaurantes login={login} restaurante={restaurante} />}
+                            path="/restaurantes"
                         ></Route>
                         <Route
-                            element={<Paquetes login={login} />}
+                            element={<Paquetes login={login} paquetes={paquetes} restaurante={restaurante} />}
                             path="/paquetes"
                         ></Route>
                         <Route
