@@ -12,149 +12,18 @@ import LayoutPublic from "./Layout/LayoutPublic";
 import Registro from "./pages/Registro";
 import axios from "axios";
 
-const initialUsers = [
-    {
-        id: 1,
-        nombre: "John",
-        apellido: "Doe",
-        correo: "JohnDoe@gmail.com",
-        telefono: "1234567890",
-        contrasena: "password",
-        rol: "admin",
-    },
-    {
-        id: 2,
-        nombre: "Jane",
-        apellido: "Doe",
-        correo: "JaneDoe@hotmail.com",
-        telefono: "0987654321",
-        contrasena: "password",
-        rol: "cliente",
-    },
-    {
-        id: 3,
-        nombre: "Alice",
-        apellido: "Smith",
-        correo: "AliceSmith@gmail.com",
-        telefono: "1122334455",
-        contrasena: "password",
-        rol: "admin",
-    },
-    {
-        id: 4,
-        nombre: "Bob",
-        apellido: "Johnson",
-        correo: "BobJohnson@gmail.com",
-        telefono: "5566778899",
-        contrasena: "password",
-        rol: "cliente",
-    },
-    {
-        id: 5,
-        nombre: "Charlie",
-        apellido: "Brown",
-        correo: "CharlieBrown@yahoo.com",
-        telefono: "9988776655",
-        contrasena: "password",
-        rol: "admin",
-    },
-    {
-        id: 6,
-        nombre: "David",
-        apellido: "Wilson",
-        correo: "si@gmail.com",
-        telefono: "1231231234",
-        contrasena: "12345",
-        rol: "admin",
-    },
-    {
-        id: 7,
-        nombre: "Eve",
-        apellido: "Davis",
-        correo: "no@gmail.com",
-        telefono: "4564564567",
-        contrasena: "12345",
-        rol: "cliente",
-    },
-];
-
-const initialRestaurante = [
-    {
-        id: 1,
-        nombre: "Restaurante 1",
-        direccion: "Calle 123",
-        latitud: 12.345678,
-        longitud: 98.765432,
-        google_place_id: "ChIJN1t_tDeuEmsR8j0v2c3g4",
-        rating_google: 4.5,
-        admin_restaurante_id: 1,
-    },
-    {
-        id: 2,
-        nombre: "Restaurante 2",
-        direccion: "Calle 456",
-        latitud: 23.456789,
-        longitud: 87.654321,
-        google_place_id: "ChIJN1t_tDeuEmsR8j0v2c3g4",
-        rating_google: 4.0,
-        admin_restaurante_id: 2,
-    },
-    {
-        id: 3,
-        nombre: "Restaurante 3",
-        direccion: "Calle 789",
-        latitud: 34.56789,
-        longitud: 76.54321,
-        google_place_id: "ChIJN1t_tDeuEmsR8j0v2c3g4",
-        rating_google: 3.5,
-        admin_restaurante_id: 3,
-    },
-];
-
-const initialPaquetes = [
-    {
-        id: 1,
-        nombre_paquete: "Paquete 1",
-        descripcion: "Descripción del paquete 1",
-        imagen: "images/paquete1.jpg",
-        precio: 100,
-        stock: 10,
-        fecha_vencimiento: "2023-12-31",
-        restaurante_id: 1,
-    },
-    {
-        id: 2,
-        nombre_paquete: "Paquete 2",
-        descripcion: "Descripción del paquete 2",
-        imagen: "images/paquete2.jpg",
-        precio: 200,
-        stock: 5,
-        fecha_vencimiento: "2023-11-30",
-        restaurante_id: 2,
-    },
-    {
-        id: 3,
-        nombre_paquete: "Paquete 3",
-        descripcion: "Descripción del paquete 3",
-        imagen: "images/paquete3.jpg",
-        precio: 150,
-        stock: 8,
-        fecha_vencimiento: "2023-10-31",
-        restaurante_id: 3,
-    },
-];
-
 const App = () => {
-
-    const server = "http://192.168.0.186:3001"
+    const server = "http://192.168.0.186:3001";
 
     const [login, setLogin] = useState(false); //verificar si el usuario esta logueado o no
 
-    const [users, setUsers] = useState(); //tiene la lista de usuarios
+    const [users, setUsers] = useState([]); //tiene la lista de usuarios
 
-    const [restaurante, setRestaurante] = useState(initialRestaurante); // tiene la lista de restaurantes
+    const [restaurante, setRestaurante] = useState([]); // tiene la lista de restaurantes
 
-    const [paquetes, setPaquetes] = useState(initialPaquetes); // tiene la lista de paquetes
+    const [paquetes, setPaquetes] = useState([]); // tiene la lista de paquetes
+
+    const [pedidos, setPedidos] = useState([]); // tiene la lista de pedidos
 
     const [userLogin, setUserLogin] = useState({
         // informacion del usuario logueado
@@ -170,14 +39,48 @@ const App = () => {
     useEffect(() => {
         // Recuperar usuario del localStorage
         const storedUser = localStorage.getItem("user");
+        let parsedUser = null;
+
         if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
+            parsedUser = JSON.parse(storedUser);
             setUserLogin(parsedUser);
             setLogin(true);
+
+            // Obtener pedidos del usuario actual
+            axios
+                .get(`${server}/pedido/${parsedUser.id}`)
+                .then((response) => {
+                    setPedidos(response.data);
+                    console.log(
+                        "Pedidos del usuario",
+                        parsedUser.id,
+                        ":",
+                        response.data
+                    );
+                })
+                .catch((error) => {
+                    console.error("Error fetching pedidos:", error);
+                    // Limpiar pedidos en caso de error
+                    setPedidos([]);
+                });
+        } else {
+            // Si no hay usuario, limpiar datos relacionados
+            setLogin(false);
+            setUserLogin({
+                id: "",
+                nombre: "",
+                apellido: "",
+                email: "",
+                password: "",
+                rol: "cliente",
+                telefono: "",
+            });
+            setPedidos([]);
         }
-    
+
         // Obtener usuarios
-        axios.get(`${server}/usuarios`)
+        axios
+            .get(`${server}/usuarios`)
             .then((response) => {
                 setUsers(response.data);
                 console.log("Usuarios:", response.data);
@@ -185,9 +88,10 @@ const App = () => {
             .catch((error) => {
                 console.error("Error fetching users:", error);
             });
-    
+
         // Obtener paquetes
-        axios.get(`${server}/paquetes`)
+        axios
+            .get(`${server}/paquetes`)
             .then((response) => {
                 setPaquetes(response.data);
                 console.log("Paquetes:", response.data);
@@ -195,9 +99,10 @@ const App = () => {
             .catch((error) => {
                 console.error("Error fetching paquetes:", error);
             });
-    
+
         // Obtener restaurantes
-        axios.get(`${server}/restaurantes`)
+        axios
+            .get(`${server}/restaurantes`)
             .then((response) => {
                 setRestaurante(response.data);
                 console.log("Restaurantes:", response.data);
@@ -205,8 +110,7 @@ const App = () => {
             .catch((error) => {
                 console.error("Error fetching restaurantes:", error);
             });
-    }, []);
-    
+    }, [server]); // Solo depende del server, no de userLogin
 
     const asideOptions = [
         // opciones del aside
@@ -228,6 +132,8 @@ const App = () => {
                 setUserLogin={setUserLogin}
                 login={login}
                 setLogin={setLogin}
+                pedidos={pedidos}
+                setPedidos={setPedidos}
             />
 
             <Aside asideOptions={asideOptions} userLogin={userLogin} />
@@ -241,15 +147,28 @@ const App = () => {
                         />
                         <Route element={<Inicio />} path="/inicio"></Route>
                         <Route
-                            element={<Restaurantes login={login} restaurante={restaurante} />}
+                            element={
+                                <Restaurantes
+                                    login={login}
+                                    restaurante={restaurante}
+                                />
+                            }
                             path="/restaurantes"
                         ></Route>
                         <Route
-                            element={<Paquetes login={login} paquetes={paquetes} restaurante={restaurante} />}
+                            element={
+                                <Paquetes
+                                    login={login}
+                                    paquetes={paquetes}
+                                    restaurante={restaurante}
+                                />
+                            }
                             path="/paquetes"
                         ></Route>
                         <Route
-                            element={<Pedidos login={login} />}
+                            element={
+                                <Pedidos login={login} pedidos={pedidos} />
+                            }
                             path="/pedidos"
                         ></Route>
                         <Route

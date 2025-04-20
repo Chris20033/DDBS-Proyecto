@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
-const Header = ({ users, login, setLogin, userLogin, setUserLogin }) => {
+const Header = ({ users, login, setLogin, userLogin, setUserLogin, setPedidos }) => {
     const [clicked, setClicked] = useState(false); //verifica si se dio click en el icono de usuario
 
     const { nombre, email, password } = userLogin;
@@ -9,23 +9,21 @@ const Header = ({ users, login, setLogin, userLogin, setUserLogin }) => {
     const handleLogin = (e) => {
         // verifica si los campos de login son correctos
         e.preventDefault();
-
+    
         if (!email.trim() || !password.trim()) {
             return alert("Completa todos los campos");
         }
-
+    
         //verifica si el usuario y contraseña son correctos
         const founduser = users.filter(
-            (usuario) =>
-                email == usuario.correo && password == usuario.contrasena
+            (usuario) => email == usuario.correo && password == usuario.contrasena
         );
-
+    
         //verifica si el usuario existe
         if (founduser.length > 0) {
-            const { id, nombre, apellido, correo, rol, telefono } =
-                founduser[0];
-            setLogin(true);
-
+            const { id, nombre, apellido, correo, rol, telefono } = founduser[0];
+            
+            // Crear objeto de usuario
             const newUser = {
                 id: id,
                 nombre: nombre,
@@ -34,27 +32,52 @@ const Header = ({ users, login, setLogin, userLogin, setUserLogin }) => {
                 rol: rol,
                 telefono: telefono,
             };
-
-            setUserLogin({
-                id: id,
-                nombre: nombre,
-                apellido: apellido,
-                email: correo,
-                rol: rol,
-                telefono: telefono,
-            });
+    
+            // Actualizar estado de usuario y login
+            setUserLogin(newUser);
+            setLogin(true);
+            
+            // Guardar en localStorage
             localStorage.setItem("user", JSON.stringify(newUser));
+            
+            // Cerrar el popup de login
             setClicked(false);
+    
+            // Cargar los pedidos específicos del usuario que inicia sesión
+            fetch(`http://192.168.0.186:3001/pedido/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar los pedidos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Pedidos del usuario que inició sesión:", data);
+                    setPedidos(data); // Actualiza el estado con los pedidos del usuario actual
+                })
+                .catch(error => {
+                    console.error("Error al obtener pedidos:", error);
+                    setPedidos([]); // En caso de error, establecer array vacío
+                });
         } else {
             return alert("Usuario o contraseña incorrectos");
         }
     };
 
     const handleLogout = () => {
-        setLogin(false);
-        setClicked(false);
-        setUserLogin([]);
         localStorage.removeItem("user");
+        setLogin(false);
+        setUserLogin({
+            id: "",
+            nombre: "",
+            apellido: "",
+            email: "",
+            password: "",
+            rol: "cliente",
+            telefono: "",
+        });
+        // Limpiar los pedidos al cerrar sesión
+        setPedidos([]);
     };
 
     const handleChange = (e) => {
