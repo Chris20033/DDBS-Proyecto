@@ -52,7 +52,7 @@ const Pedidos = ({ login, pedidos = [] }) => {
 
     return (
         <div className="w-full max-w-6xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold text-green-700 mb-6 text-center">
+            <h1 className="text-3xl font-bold text-green-700 mb-6 text-center bg-white rounded-lg shadow-md p-4">
                 Mis Pedidos
             </h1>
 
