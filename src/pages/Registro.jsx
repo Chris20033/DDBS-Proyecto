@@ -1,7 +1,8 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Registro = ({ users, setUsers }) => {
+const Registro = ({ users, setUsers, server }) => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         nombre: "",
@@ -90,10 +91,6 @@ const Registro = ({ users, setUsers }) => {
 
         // Crear nuevo usuario
         const newUser = {
-            id:
-                users.length > 0
-                    ? Math.max(...users.map((user) => user.id)) + 1
-                    : 1,
             nombre: formData.nombre,
             apellido: formData.apellido,
             correo: formData.correo,
@@ -104,6 +101,16 @@ const Registro = ({ users, setUsers }) => {
 
         // Actualizar la lista de usuarios
         setUsers([...users, newUser]);
+
+        // Guardar el nuevo usuario en el servidor (opcional)
+        axios
+            .post(`${server}/usuarios`, newUser)
+            .then((response) => {
+                console.log("Usuario registrado:", response.data);
+            })
+            .catch((error) => {
+                console.error("Error al registrar el usuario:", error);
+            });
 
         // Mostrar mensaje de éxito y redireccionar
         alert("¡Registro exitoso! Ahora puedes iniciar sesión.");

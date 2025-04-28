@@ -12,4 +12,7 @@ npm install react-router-dom
 npm install -D tailwindcss postcss autoprefixer
 npm install -D prettier prettier-plugin-tailwindcss
 npm install axios
+npm install react-leaflet leaflet
+npm install leaflet-defaulticon-compatibility
+
 ```

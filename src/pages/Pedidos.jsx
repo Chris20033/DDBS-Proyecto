@@ -95,7 +95,7 @@ const Pedidos = ({ login, pedidos = [] }) => {
             {/* Lista de Pedidos */}
             {pedidosFiltrados && pedidosFiltrados.length > 0 ? (
                 <div className="space-y-6">
-                    {pedidosFiltrados.map((pedido) => (
+                    {pedidosFiltrados.map((pedido, $index) => (
                         <div
                             key={pedido.pedido_id}
                             className="bg-white rounded-lg shadow-md overflow-hidden"
@@ -104,7 +104,7 @@ const Pedidos = ({ login, pedidos = [] }) => {
                             <div className="bg-gray-50 p-4 border-b flex justify-between items-center">
                                 <div>
                                     <h3 className="text-lg font-semibold">
-                                        Pedido #{pedido.pedido_id}
+                                        Pedido #{$index + 1}
                                     </h3>
                                     <p className="text-gray-600 text-sm">
                                         {formatDate(pedido.fecha_pedido)}
