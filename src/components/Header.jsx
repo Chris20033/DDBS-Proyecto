@@ -1,35 +1,70 @@
-import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import { NavLink } from "react-router-dom";
+import axios from "axios";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
-const Header = ({ 
-    users, 
-    login, setLogin, 
-    userLogin, setUserLogin, 
-    setPedidos, 
-    server, 
-    setMetodoPago }) => {
+const Header = () => {
+    const {
+        users,
+        login,
+        setLogin,
+        userLogin,
+        setUserLogin,
+        setPedidos,
+        server,
+        setMetodoPago,
+        asideOpen,
+        setAsideOpen, // Añadir estos estados desde el AppContext
+    } = useContext(AppContext);
 
-    const [clicked, setClicked] = useState(false); //verifica si se dio click en el icono de usuario
-
+    const [clicked, setClicked] = useState(false);
     const { nombre, email, password } = userLogin;
+
+    // Función para manejar la apertura/cierre del menú lateral
+    const toggleAside = () => {
+        const newState = !asideOpen;
+        setAsideOpen(newState);
+
+        // Añadir/remover clase al body para el overlay
+        if (newState) {
+            document.body.classList.add("menu-open");
+        } else {
+            document.body.classList.remove("menu-open");
+        }
+    };
+
+    // Cerrar menú al cambiar el tamaño de la ventana
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 768 && asideOpen) {
+                setAsideOpen(false);
+                document.body.classList.remove("menu-open");
+            }
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [asideOpen, setAsideOpen]);
 
     const handleLogin = (e) => {
         // verifica si los campos de login son correctos
         e.preventDefault();
 
         if (!email.trim() || !password.trim()) {
-            return alert('Completa todos los campos');
+            return alert("Completa todos los campos");
         }
 
         //verifica si el usuario y contraseña son correctos
         const founduser = users.filter(
-            (usuario) => email == usuario.correo && password == usuario.contrasena
+            (usuario) =>
+                email == usuario.correo && password == usuario.contrasena
         );
 
         //verifica si el usuario existe
         if (founduser.length > 0) {
-            const { id, nombre, apellido, correo, rol, telefono } = founduser[0];
+            const { id, nombre, apellido, correo, rol, telefono } =
+                founduser[0];
 
             // Crear objeto de usuario
             const newUser = {
@@ -46,7 +81,7 @@ const Header = ({
             setLogin(true);
 
             // Guardar en localStorage
-            localStorage.setItem('user', JSON.stringify(newUser));
+            localStorage.setItem("user", JSON.stringify(newUser));
 
             // Cerrar el popup de login
             setClicked(false);
@@ -56,51 +91,50 @@ const Header = ({
                 .get(`${server}/pedido/${id}`)
                 .then((response) => {
                     setPedidos(response.data);
-                    console.log('Pedidos:', response.data);
+                    console.log("Pedidos:", response.data);
                 })
                 .catch((error) => {
-                    console.error('Error fetching restaurantes:', error);
+                    console.error("Error fetching restaurantes:", error);
                 });
 
-                
             // Cargar los métodos de pago específicos del usuario que inicia sesión
             axios
                 .get(`${server}/pago/${id}`)
                 .then((response) => {
                     setMetodoPago(response.data);
-                    console.log('Metodos de pago:', response.data);
+                    console.log("Metodos de pago:", response.data);
                 })
                 .catch((error) => {
-                    console.error('Error fetching restaurantes:', error);
+                    console.error("Error fetching restaurantes:", error);
                 });
 
             //Cargar las direcciones específicas del usuario que inicia sesión
             axios
                 .get(`${server}/direccion/${id}`)
                 .then((response) => {
-                    console.log('Direcciones:', response.data);
+                    console.log("Direcciones:", response.data);
                 })
                 .catch((error) => {
-                    console.error('Error fetching direcciones:', error);
+                    console.error("Error fetching direcciones:", error);
                 });
-        } else {
-            return alert('Usuario o contraseña incorrectos');
-        }
 
-        
+            console.log(userLogin);
+        } else {
+            return alert("Usuario o contraseña incorrectos");
+        }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
+        localStorage.removeItem("user");
         setLogin(false);
         setUserLogin({
-            id: '',
-            nombre: '',
-            apellido: '',
-            email: '',
-            password: '',
-            rol: 'cliente',
-            telefono: '',
+            id: "",
+            nombre: "",
+            apellido: "",
+            email: "",
+            password: "",
+            rol: "cliente",
+            telefono: "",
         });
         // Limpiar los pedidos al cerrar sesión
         setPedidos([]);
@@ -117,51 +151,88 @@ const Header = ({
     return (
         <div
             id="header"
-            className="flex justify-between items-center bg-[#4ed89f] h-24 pl-10 pr-10 shadow-[0_4px_8px_rgba(0,0,0,0.5)] w-full z-50"
+            className="flex justify-between items-center bg-[#4ed89f] h-24 pl-4 pr-4 md:pl-10 md:pr-10 shadow-[0_4px_8px_rgba(0,0,0,0.5)] w-full z-50"
         >
-            <NavLink to="/">
-                <img src="images/logo.png" alt="" className="h-28 w-auto" />
+            {/* Botón de menú para móviles */}
+            <button
+                className="md:hidden p-2 text-white"
+                onClick={toggleAside}
+                aria-label="Toggle menu"
+            >
+                <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                    />
+                </svg>
+            </button>
+
+            <NavLink to="/" className="flex items-center">
+                <img
+                    src="images/logo.png"
+                    alt="NO JALA"
+                    className="h-20 md:h-28 w-auto "
+                />
             </NavLink>
 
-            <div className="w-[50%] bg-[#117449] rounded-md">
+            <div className="hidden md:flex w-[50%] bg-[#117449] rounded-md">
                 <input
                     type="text"
                     placeholder="Buscar..."
-                    className=" bg-green-800 text-white w-[85%] rounded-l-md p-3"
+                    className="bg-green-800 text-white w-[85%] rounded-l-md p-3"
                 />
-                <button className=" w-[12%] h-full text-white rounded-2xl p-3 ml-2 cursor-pointer">
+                <button className="w-[12%] h-full text-white rounded-2xl p-3 ml-2 cursor-pointer">
                     Buscar
                 </button>
             </div>
 
-            <div className="flex justify-center items-center gap-4">
+            <div className="flex justify-center items-center gap-2 md:gap-4">
                 {!login && (
                     <NavLink
-                        className="p-2 rounded-md text-white font-bold text-[20px] hover:bg-[#117449]"
+                        className="p-1 md:p-2 rounded-md text-white font-bold text-sm md:text-[20px] hover:bg-[#117449]"
                         to="/registro"
                     >
-                        Registrate
+                        Registrarte
                     </NavLink>
                 )}
 
                 <a
                     onClick={() => setClicked(!clicked)}
-                    className="flex flex-col justify-center items-center cursor-pointer relative hover:bg-[#117449] p-2 rounded-md"
+                    className="flex flex-col justify-center items-center cursor-pointer relative hover:bg-[#117449] p-1 md:p-2 rounded-md"
                 >
-                    <img src="images/usr.webp" alt="" className="h-12 w-auto" />
+                    <img
+                        src="images/usr.webp"
+                        alt="NO JALA"
+                        className="h-8 md:h-12 w-auto"
+                    />
                     {!login ? (
-                        <h1 className="text-white font-bold text-[20px]">Login</h1>
+                        <h1 className="text-white font-bold text-sm md:text-[20px]">
+                            Login
+                        </h1>
                     ) : (
-                        <h1 className="text-white font-bold text-[20px]">{nombre}</h1>
+                        <h1 className="text-white font-bold text-sm md:text-[20px]">
+                            {nombre}
+                        </h1>
                     )}
                 </a>
             </div>
 
+            {/* Popup de login existente */}
             {clicked && (
-                <div className="absolute top-20 right-2 bg-white shadow-lg rounded-lg p-4 mt-2">
+                <div className="absolute top-20 right-2 bg-white shadow-lg rounded-lg p-4 mt-2 z-50">
                     {login ? (
                         <div className="flex flex-col items-center">
-                            <h2 className="text-lg font-bold mb-2">Bienvenido {nombre}</h2>
+                            <h2 className="text-lg font-bold mb-2">
+                                Bienvenido {nombre}
+                            </h2>
                             <button
                                 onClick={handleLogout}
                                 className="bg-red-500 text-white px-4 py-2 rounded"
@@ -171,7 +242,9 @@ const Header = ({
                         </div>
                     ) : (
                         <div className="flex flex-col items-center">
-                            <h2 className="text-lg font-bold mb-2">Iniciar sesión</h2>
+                            <h2 className="text-lg font-bold mb-2">
+                                Iniciar sesión
+                            </h2>
                             <form
                                 onSubmit={handleLogin}
                                 className="flex flex-col items-center mb-4"

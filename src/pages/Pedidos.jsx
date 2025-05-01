@@ -1,6 +1,11 @@
 import React, { useState } from "react";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
-const Pedidos = ({ login, pedidos = [] }) => {
+const Pedidos = () => {
+    const { login, pedidos } = useContext(AppContext);
+
+    // Estado para el filtro de pedidos
     const [filtroEstado, setFiltroEstado] = useState("todos");
 
     // Formatear fecha
@@ -51,17 +56,17 @@ const Pedidos = ({ login, pedidos = [] }) => {
     }
 
     return (
-        <div className="w-full max-w-6xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold text-green-700 mb-6 text-center bg-white rounded-lg shadow-md p-4">
+        <div className="w-full max-w-6xl mx-auto px-2 md:px-4 py-4 md:py-8">
+            <h1 className="text-xl md:text-3xl font-bold text-green-700 mb-4 md:mb-6 text-center bg-white rounded-lg shadow-md p-2 md:p-4">
                 Mis Pedidos
             </h1>
 
-            {/* Filtros simplificados */}
-            <div className="flex justify-center mb-6">
+            {/* Filtros con mejor adaptación a móvil */}
+            <div className="flex justify-center mb-4 md:mb-6 overflow-x-auto py-2">
                 <div className="inline-flex rounded-md shadow-sm" role="group">
                     <button
                         onClick={() => setFiltroEstado("todos")}
-                        className={`py-2 px-4 text-sm font-medium rounded-l-lg ${
+                        className={`py-1 md:py-2 px-2 md:px-4 text-xs md:text-sm font-medium rounded-l-lg ${
                             filtroEstado === "todos"
                                 ? "bg-green-600 text-white"
                                 : "bg-white text-gray-700 hover:bg-gray-100"
@@ -71,7 +76,7 @@ const Pedidos = ({ login, pedidos = [] }) => {
                     </button>
                     <button
                         onClick={() => setFiltroEstado("pendiente")}
-                        className={`py-2 px-4 text-sm font-medium ${
+                        className={`py-1 md:py-2 px-2 md:px-4 text-xs md:text-sm font-medium ${
                             filtroEstado === "pendiente"
                                 ? "bg-green-600 text-white"
                                 : "bg-white text-gray-700 hover:bg-gray-100"
@@ -81,7 +86,7 @@ const Pedidos = ({ login, pedidos = [] }) => {
                     </button>
                     <button
                         onClick={() => setFiltroEstado("confirmado")}
-                        className={`py-2 px-4 text-sm font-medium rounded-r-lg ${
+                        className={`py-1 md:py-2 px-2 md:px-4 text-xs md:text-sm font-medium rounded-r-lg ${
                             filtroEstado === "confirmado"
                                 ? "bg-green-600 text-white"
                                 : "bg-white text-gray-700 hover:bg-gray-100"
@@ -94,7 +99,7 @@ const Pedidos = ({ login, pedidos = [] }) => {
 
             {/* Lista de Pedidos */}
             {pedidosFiltrados && pedidosFiltrados.length > 0 ? (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                     {pedidosFiltrados.map((pedido, $index) => (
                         <div
                             key={pedido.pedido_id}
@@ -204,6 +209,7 @@ const Pedidos = ({ login, pedidos = [] }) => {
                                     d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                                 />
                             </svg>
+
                             <p className="mt-4 text-lg text-gray-600">
                                 No tienes pedidos realizados todavía.
                             </p>

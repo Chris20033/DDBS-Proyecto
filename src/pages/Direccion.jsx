@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import axios from 'axios';
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 import L from 'leaflet';
 
 // Componente interno para seleccionar la ubicación en el mapa
@@ -37,7 +39,21 @@ const LocationMarker = ({ setFormData }) => {
     return position === null ? null : <Marker position={position} />;
 };
 
-const Direccion = ({ userLogin, server, login, direcciones, setDirecciones }) => {
+const Direccion = () => {
+    const { userLogin, server, login, direcciones, setDirecciones } = useContext(AppContext);
+
+    useEffect(() => {
+        const fetchDirecciones = async () => {
+            try {
+                const response = await axios.get(`${server}/direccion/${userLogin?.id}`);
+                setDirecciones(response.data);
+            } catch (error) {
+                console.error('Error al cargar direcciones:', error);
+            }
+        };
+        fetchDirecciones();
+    }, [userLogin, server, setDirecciones]);
+    
     const [formData, setFormData] = useState({
         usuario_id: userLogin?.id,
         calle: '',

@@ -1,8 +1,7 @@
 @import "tailwindcss";
-@import 'leaflet/dist/leaflet.css';
-@import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
-@import 'leaflet-defaulticon-compatibility';
-
+@import "leaflet/dist/leaflet.css";
+@import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+@import "leaflet-defaulticon-compatibility";
 
 html,
 body {
@@ -15,18 +14,19 @@ body {
     grid-template-areas:
         "header header header"
         "sidebar content content"
-        "sidebar content content"
         "sidebar footer footer";
-    grid-template-columns: 1fr 9fr;
-    grid-template-rows: auto 1fr 1fr auto;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr auto;
     min-height: 100vh;
 }
 
 #content {
     grid-area: content;
     overflow-y: auto;
-    padding-top: 96px; 
-    padding-bottom: 20px;
+    padding: 96px 16px 0px;
+    padding-left: 220px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #header {
@@ -35,7 +35,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 50; 
+    z-index: 50;
 }
 
 #aside {
@@ -46,8 +46,47 @@ body {
     bottom: 0;
     overflow-y: auto;
     z-index: 40;
+    transition: transform 0.3s ease;
+    width: 12rem; /* 192px, alineado con clase w-48 */
 }
 
 #footer {
     grid-area: footer;
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+    #main {
+        grid-template-areas:
+            "header"
+            "content"
+            "footer";
+        grid-template-columns: 1fr;
+    }
+
+    #aside {
+        transform: translateX(-100%);
+    }
+
+    #aside.active {
+        transform: translateX(0);
+    }
+
+    /* Cuando el menú está abierto, añadir un overlay */
+    body.menu-open::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+    }
+
+    /* Ajustar el contenido para que no se vea afectado por el aside */
+    #content {
+        padding-left: 16px;
+        margin-left: 0;
+    }
 }

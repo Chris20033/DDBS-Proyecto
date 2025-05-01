@@ -1,8 +1,12 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
-const Registro = ({ users, setUsers, server }) => {
+const Registro = () => {
+
+    const { server, users, setUsers } = useContext(AppContext);
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         nombre: "",

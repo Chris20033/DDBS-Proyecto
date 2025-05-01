@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import Products from '../components/Products';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
+import Products from "../components/Products";
+import { Link } from "react-router-dom";
 
-const Paquetes = ({
-    login,
-    paquetes = [],
-    restaurante = [],
-    server,
-    userLogin,
-    metodoPago = [],
-    direcciones = [],
-}) => {
-    const [mensaje, setMensaje] = useState('');
+const Paquetes = () => {
+    const {
+        login,
+        userLogin,
+        paquetes,
+        setPaquetes,
+        restaurante,
+        metodoPago,
+        direcciones,
+        server,
+        setPedidos,
+    } = useContext(AppContext);
+
+    const [mensaje, setMensaje] = useState("");
     const [mostrarPaquetes, setMostrarPaquetes] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedDireccion, setSelectedDireccion] = useState(null);
@@ -22,7 +28,7 @@ const Paquetes = ({
 
     // Verificar requisitos al montar el componente o cuando cambien las props relevantes
     useEffect(() => {
-        // Solo verificamos si el usuario está logueado
+        // Verifica si el usuario está logueado y tiene direcciones y métodos de pago
         if (login) {
             setMostrarPaquetes(direcciones.length > 0 && metodoPago.length > 0);
             // Establecer valores por defecto para dirección y método de pago
@@ -33,27 +39,27 @@ const Paquetes = ({
 
     // Función para formatear la fecha
     const formatDate = (dateString) => {
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString('es-ES', options);
+        const options = { year: "numeric", month: "long", day: "numeric" };
+        return new Date(dateString).toLocaleDateString("es-ES", options);
     };
 
     // Función para encontrar el nombre del restaurante por ID
     const getRestauranteName = (restauranteId) => {
         const rest = restaurante.find((r) => r.id === restauranteId);
-        return rest ? rest.nombre_sucursal : 'Restaurante no encontrado';
+        return rest ? rest.nombre_sucursal : "Restaurante no encontrado";
     };
 
     // Función para iniciar el proceso de compra
     const iniciarCompra = (paquete) => {
         if (!login) {
-            alert('Para comprar este paquete, primero debes iniciar sesión.');
+            alert("Para comprar este paquete, primero debes iniciar sesión.");
             return;
         }
 
         // Verificar si tiene direcciones
         if (direcciones.length === 0) {
             alert(
-                'No tienes direcciones registradas. Por favor, registra una dirección antes de continuar.'
+                "No tienes direcciones registradas. Por favor, registra una dirección antes de continuar."
             );
             return;
         }
@@ -61,7 +67,7 @@ const Paquetes = ({
         // Verificar si tiene métodos de pago
         if (metodoPago.length === 0) {
             alert(
-                'No tienes métodos de pago registrados. Por favor, registra un método de pago antes de continuar.'
+                "No tienes métodos de pago registrados. Por favor, registra un método de pago antes de continuar."
             );
             return;
         }
@@ -69,7 +75,9 @@ const Paquetes = ({
         // Verificar si hay suficiente stock
         const cantidad = paquete.cantidad || 1; // Si no viene cantidad, asumimos 1
         if (paquete.stock < cantidad) {
-            alert(`No hay suficiente stock. Stock disponible: ${paquete.stock}`);
+            alert(
+                `No hay suficiente stock. Stock disponible: ${paquete.stock}`
+            );
             return;
         }
 
@@ -81,7 +89,7 @@ const Paquetes = ({
     // Función para manejar la compra (enviar al servidor)
     const handleCompra = async () => {
         if (!currentPaquete || !selectedDireccion || !selectedPago) {
-            alert('Por favor selecciona una dirección y un método de pago.');
+            alert("Por favor selecciona una dirección y un método de pago.");
             return;
         }
 
@@ -102,20 +110,26 @@ const Paquetes = ({
         try {
             // Crear objeto de pedido
             const now = new Date();
-            const fechaFormateada = now.toISOString().slice(0, 19).replace('T', ' ');
+            const fechaFormateada = now
+                .toISOString()
+                .slice(0, 19)
+                .replace("T", " ");
 
             const nuevoPedido = {
                 usuario_id: userLogin.id,
                 fecha_pedido: fechaFormateada,
                 direccion_id: selectedDireccion,
                 metodo_pago_id: selectedPago,
-                tipo_entrega: 'domicilio',
+                tipo_entrega: "domicilio",
                 total: currentPaquete.precio * cantidad, // Multiplicar por cantidad
-                estatus: 'En proceso',
+                estatus: "En proceso",
             };
 
             // Enviar el pedido al servidor
-            const responsePedido = await axios.post(`${server}/pedido`, nuevoPedido);
+            const responsePedido = await axios.post(
+                `${server}/pedido`,
+                nuevoPedido
+            );
 
             if (responsePedido.data && responsePedido.data.id) {
                 // Crear detalle del pedido
@@ -130,9 +144,12 @@ const Paquetes = ({
                 await axios.post(`${server}/detalle-pedido`, detallePedido);
 
                 // Actualizar el stock del paquete
-                await axios.put(`${server}/paquete/stock/${currentPaquete.id}`, {
-                    cantidad: cantidad, // Usar cantidad seleccionada
-                });
+                await axios.put(
+                    `${server}/paquete/stock/${currentPaquete.id}`,
+                    {
+                        cantidad: cantidad, // Usar cantidad seleccionada
+                    }
+                );
 
                 // Cerrar modal y mostrar mensaje de éxito
                 setShowModal(false);
@@ -149,30 +166,32 @@ const Paquetes = ({
                     return p;
                 });
 
-                // Actualizar paquetes localmente o globalmente
-                if (typeof window.actualizarPaquetes === 'function') {
-                    window.actualizarPaquetes(paquetesActualizados);
-                }
+                setPaquetes(paquetesActualizados);
 
-                setTimeout(() => setMensaje(''), 5000);
+                const PedidosActualizados = await axios.get(
+                    `${server}/pedido/${userLogin.id}`
+                );
+                setPedidos(PedidosActualizados.data);
+
+                setTimeout(() => setMensaje(""), 5000);
             } else {
-                throw new Error('No se pudo crear el pedido');
+                throw new Error("No se pudo crear el pedido");
             }
         } catch (error) {
-            console.error('Error al procesar la compra:', error);
+            console.error("Error al procesar la compra:", error);
 
             // Mensaje de error más específico
             if (
                 error.response &&
                 error.response.data &&
-                error.response.data.message === 'Stock insuficiente'
+                error.response.data.message === "Stock insuficiente"
             ) {
                 alert(
                     `Lo sentimos, no hay suficiente stock disponible para este paquete. Stock disponible: ${error.response.data.stockDisponible}`
                 );
             } else {
                 alert(
-                    'Hubo un error al procesar tu compra. Por favor, intenta de nuevo más tarde.'
+                    "Hubo un error al procesar tu compra. Por favor, intenta de nuevo más tarde."
                 );
             }
         } finally {
@@ -181,7 +200,7 @@ const Paquetes = ({
     };
 
     return (
-        <div className="w-full max-w-6xl mx-auto px-4 py-8">
+        <div className="w-full max-w-6xl mx-auto px-2 md:px-4 py-4 md:py-8">
             {/* Mensajes informativos (igual que antes) */}
             {!login && (
                 <div
@@ -211,8 +230,8 @@ const Paquetes = ({
                 >
                     <p className="font-bold">Sin dirección registrada</p>
                     <p className="mb-2">
-                        Para ver y comprar paquetes, necesitas registrar al menos una dirección de
-                        entrega.
+                        Para ver y comprar paquetes, necesitas registrar al
+                        menos una dirección de entrega.
                     </p>
                     <Link
                         to="/direccion"
@@ -230,7 +249,8 @@ const Paquetes = ({
                 >
                     <p className="font-bold">Sin método de pago</p>
                     <p className="mb-2">
-                        Para ver y comprar paquetes, necesitas registrar al menos un método de pago.
+                        Para ver y comprar paquetes, necesitas registrar al
+                        menos un método de pago.
                     </p>
                     <Link
                         to="/pago"
@@ -241,11 +261,11 @@ const Paquetes = ({
                 </div>
             )}
 
-            <h1 className="text-3xl font-bold text-green-700 mb-6 text-center bg-gray-300 p-2">
+            <h1 className="text-xl md:text-3xl font-bold text-green-700 mb-4 md:mb-6 text-center bg-gray-300 p-2">
                 Paquetes Disponibles
             </h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-300 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 bg-gray-300 p-3 md:p-6">
                 {!login ? (
                     <div className="col-span-full text-center py-10">
                         <p className="text-green-700 text-xl">
@@ -255,8 +275,8 @@ const Paquetes = ({
                 ) : !mostrarPaquetes ? (
                     <div className="col-span-full text-center py-10">
                         <p className="text-green-700 text-xl">
-                            Completa los requisitos mencionados arriba para ver los paquetes
-                            disponibles.
+                            Completa los requisitos mencionados arriba para ver
+                            los paquetes disponibles.
                         </p>
                     </div>
                 ) : paquetes.length === 0 ? (
@@ -283,32 +303,46 @@ const Paquetes = ({
             {showModal && currentPaquete && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-                        <h2 className="text-2xl font-bold text-green-700 mb-4">Confirmar Compra</h2>
+                        <h2 className="text-2xl font-bold text-green-700 mb-4">
+                            Confirmar Compra
+                        </h2>
 
                         <div className="mb-4">
-                            <h3 className="font-semibold text-lg mb-2">Paquete:</h3>
+                            <h3 className="font-semibold text-lg mb-2">
+                                Paquete:
+                            </h3>
                             <div className="bg-gray-100 p-3 rounded-md">
                                 <p>
-                                    <span className="font-medium">Nombre:</span>{' '}
+                                    <span className="font-medium">Nombre:</span>{" "}
                                     {currentPaquete.nombre_paquete}
                                 </p>
                                 <p>
-                                    <span className="font-medium">Restaurante:</span>{' '}
-                                    {getRestauranteName(currentPaquete.restaurante_id)}
+                                    <span className="font-medium">
+                                        Restaurante:
+                                    </span>{" "}
+                                    {getRestauranteName(
+                                        currentPaquete.restaurante_id
+                                    )}
                                 </p>
                                 <p>
-                                    <span className="font-medium">Precio:</span> $
-                                    {currentPaquete.precio}
+                                    <span className="font-medium">Precio:</span>{" "}
+                                    ${currentPaquete.precio}
                                 </p>
                                 <p>
-                                    <span className="font-medium">Cantidad:</span>{' '}
+                                    <span className="font-medium">
+                                        Cantidad:
+                                    </span>{" "}
                                     {currentPaquete.cantidad || 1}
                                 </p>
                                 <p>
                                     <hr />
-                                    <span className="font-medium">TOTAL:</span> $
+                                    <span className="font-medium">
+                                        TOTAL:
+                                    </span>{" "}
+                                    $
                                     {(
-                                        (currentPaquete.cantidad || 1) * currentPaquete.precio
+                                        (currentPaquete.cantidad || 1) *
+                                        currentPaquete.precio
                                     ).toFixed(2)}
                                 </p>
                             </div>
@@ -320,12 +354,17 @@ const Paquetes = ({
                             </label>
                             <select
                                 value={selectedDireccion}
-                                onChange={(e) => setSelectedDireccion(parseInt(e.target.value))}
+                                onChange={(e) =>
+                                    setSelectedDireccion(
+                                        parseInt(e.target.value)
+                                    )
+                                }
                                 className="w-full p-2 border rounded-md"
                             >
                                 {direcciones.map((dir) => (
                                     <option key={dir.id} value={dir.id}>
-                                        {dir.calle} {dir.numero}, {dir.colonia}, {dir.ciudad}
+                                        {dir.calle} {dir.numero}, {dir.colonia},{" "}
+                                        {dir.ciudad}
                                     </option>
                                 ))}
                             </select>
@@ -337,13 +376,15 @@ const Paquetes = ({
                             </label>
                             <select
                                 value={selectedPago}
-                                onChange={(e) => setSelectedPago(parseInt(e.target.value))}
+                                onChange={(e) =>
+                                    setSelectedPago(parseInt(e.target.value))
+                                }
                                 className="w-full p-2 border rounded-md"
                             >
                                 {metodoPago.map((mp) => (
                                     <option key={mp.id} value={mp.id}>
-                                        {mp.tipo === 'paypal'
-                                            ? 'PayPal'
+                                        {mp.tipo === "paypal"
+                                            ? "PayPal"
                                             : `Tarjeta terminada en ${mp.numero_tarjeta.slice(-4)}`}
                                     </option>
                                 ))}
@@ -363,7 +404,9 @@ const Paquetes = ({
                                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                                 disabled={isProcessing}
                             >
-                                {isProcessing ? 'Procesando...' : 'Confirmar Compra'}
+                                {isProcessing
+                                    ? "Procesando..."
+                                    : "Confirmar Compra"}
                             </button>
                         </div>
                     </div>

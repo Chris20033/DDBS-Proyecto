@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
-const Pago = ({ userLogin, server, metodoPago, setMetodoPago, login }) => {
+const Pago = () => {
+    const { userLogin, server, metodoPago, setMetodoPago, login } = useContext(AppContext);
+
+    // Estado para almacenar los datos del formulario
     const [formData, setFormData] = useState({
         usuario_id: userLogin?.id,
         tipo: 'credito', // Default value
@@ -13,7 +18,7 @@ const Pago = ({ userLogin, server, metodoPago, setMetodoPago, login }) => {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Effect to handle PayPal option changes
+    // useEffect para manejar el cambio de tipo de tarjeta
     useEffect(() => {
         console.log('pagos', metodoPago);
         if (formData.tipo === 'paypal') {

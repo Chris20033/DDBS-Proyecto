@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 
 const Products = ({ paquete, getRestauranteName, handleCompra, formatDate, login }) => {
+
+
     // Definir estado para la cantidad
     const [cantidad, setCantidad] = useState(1);
-
-    // Verificar si hay stock disponible
-    const hayStock = paquete.stock > 0;
 
     // Manejar cambio de cantidad
     const handleCantidadChange = (e) => {

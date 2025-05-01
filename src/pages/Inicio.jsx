@@ -1,9 +1,10 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
+
 const Inicio = () => {
     return (
-        <div className="w-full max-w-6xl mx-auto px-4 py-8 bg-white">
+        <div className="w-full max-w-6xl mx-auto px-4 py-8 bg-gray-100 mt-10 rounded-lg border border-gray-300 shadow-2xl ">
             {/* Hero Section */}
             <div className="bg-gradient-to-r from-green-100 to-green-200 rounded-lg shadow-lg p-8 mb-12">
                 <h1 className="text-4xl font-bold text-green-800 mb-4">
