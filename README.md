@@ -9,12 +9,6 @@ Currently, two official plugins are available:
 - Usar este comando para instalar todas las dependencias
 ```bash
 npm install
-npm install react-router-dom
-npm install -D tailwindcss postcss autoprefixer
-npm install -D prettier prettier-plugin-tailwindcss
-npm install axios
-npm install react-leaflet leaflet
-npm install leaflet-defaulticon-compatibility
 
 ```
 
@@ -26,5 +20,12 @@ npm install -D prettier prettier-plugin-tailwindcss
 npm install axios
 npm install react-leaflet leaflet
 npm install leaflet-defaulticon-compatibility
+
+```
+
+# Para compilar el proyecto ejecutar el siguiente comando
+
+```bash
+npm run dev
 
 ```
