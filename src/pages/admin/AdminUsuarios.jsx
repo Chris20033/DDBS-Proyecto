@@ -72,46 +72,46 @@ const AdminUsuarios = () => {
                                     // setShowModal(true);
                                 }}
                             >
-                                Agregar Restaurante
+                                Agregar Usuario
                             </button>
                         </div>
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">ID</th>
-                                    <th scope="col">Nombre</th>
-                                    <th scope="col">Apellido</th>
-                                    <th scope="col">Email</th>
-                                    <th scope="col">Rol</th>
-                                    <th scope="col">Desactivar cuenta</th>
+                        <table className="min-w-full bg-white border">
+                            <thead className="bg-gray-100">
+                                <tr >
+                                    <th scope="col" className="py-2 px-4 border-b">ID</th>
+                                    <th scope="col" className="py-2 px-4 border-b">Nombre</th>
+                                    <th scope="col" className="py-2 px-4 border-b">Apellido</th>
+                                    <th scope="col" className="py-2 px-4 border-b">Email</th>
+                                    <th scope="col" className="py-2 px-4 border-b">Rol</th>
+                                    <th scope="col" className="py-2 px-4 border-b">Desactivar cuenta</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {usuarios.map((usuario) => (
-                                    <tr key={usuario.id} className="border-b">
-                                        <td className="text-center pl-2 pr-2">
+                                    <tr key={usuario.id} className="border-b hover:bg-gray-50">
+                                        <td className="py-2 px-4 text-center">
                                             {usuario.id}
                                         </td>
-                                        <td className="text-center pl-2 pr-2">
+                                        <td className="py-2 px-4 text-center">
                                             {usuario.nombre}
                                         </td>
-                                        <td className="text-center pl-2 pr-2">
+                                        <td className="py-2 px-4 text-center">
                                             {usuario.apellido}
                                         </td>
-                                        <td className="text-center pl-2 pr-2">
+                                        <td className="py-2 px-4 text-center">
                                             {usuario.correo}
                                         </td>
-                                        <td className="text-center pl-2 pr-2">
+                                        <td className="py-2 px-4 text-center">
                                             {usuario.rol}
                                         </td>
-                                        <td className="text-center pl-2 pr-2">
+                                        <td className="py-2 px-4 text-center">
                                             {usuario.rol === "admin" ? (
                                                 <p className="bg-blue-900 p-2 text-white rounded-md">
                                                     No se puede desactivar
                                                 </p>
                                             ) : usuario.activo == 0 ? (
                                                 <button
-                                                    className="cursor-pointer p-2 bg-green-500 mt-2 mb-2 text-white rounded-md"
+                                                    className="cursor-pointer bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
                                                     onClick={() =>
                                                         handleActivate(
                                                             usuario.id
@@ -122,7 +122,7 @@ const AdminUsuarios = () => {
                                                 </button>
                                             ) : (
                                                 <button
-                                                    className="cursor-pointer p-2 bg-red-500 mt-2 mb-2 text-white rounded-md"
+                                                    className="cursor-pointer bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                                     onClick={() =>
                                                         handleDeactivate(
                                                             usuario.id
