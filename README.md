@@ -11,6 +11,11 @@ Currently, two official plugins are available:
 npm install
 
 ```
+- Después para correr el programa usar este comando
+```bash
+npm run dev
+
+```
 
 - En dado caso que no cargue todas las dependencias hacer estos comandos
 ```bash
@@ -23,9 +28,19 @@ npm install leaflet-defaulticon-compatibility
 
 ```
 
-# Para compilar el proyecto ejecutar el siguiente comando
+# Backend (NodeJS)
 
+Para poder usar tambien el backend vamos a hacer lo siguiente:
+- Primero entraremos a la carpeta `/server` con el comando:
 ```bash
-npm run dev
-
+cd server
 ```
+- Estando dentro de la carpeta, instalaremos las dependencias necesarias con el siguiente comando
+```bash
+npm install
+```
+- Una vez instaladas las dependencias lo compilaremos con el siguiente comando:
+```bash
+npm start
+```
+Si todo va bien deberia aparecer el mensaje en terminal: `Server running at http://localhost:3001`
