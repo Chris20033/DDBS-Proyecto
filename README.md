@@ -11,9 +11,14 @@ Para que este conectado todo entre sí primero haremos lo siguiente:
     ```bash
     mysql -u tu_usuario -p -e "CREATE DATABASE proyecto;"
     ```
-    - Después importaremos la BD con el siguiente comando:
-    ```bash
+    - Después importaremos la BD con el siguiente comando (tienen que poner la ubicacion exacta en donde se encuentra el archivo), se pueden hacer de dos formas:
+     ```bash
+    cd /ruta/del/archivo/
     mysql -u tu_usuario -p proyecto < proyecto.sql
+
+    ```
+    ```bash
+    mysql -u tu_usuario -p proyecto < /ruta/completa/a/pryoecto.sql
     ```
 
 - Con esto ya tendremos la BD en la VM, ya solo queda checar la IP de la VM para cambiarla en las siguientes lineas de los siguientes archivos
