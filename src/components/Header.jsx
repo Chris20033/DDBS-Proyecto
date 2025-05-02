@@ -6,7 +6,7 @@ import { AppContext } from "../context/AppContext";
 
 const Header = () => {
     const {
-        users,
+        setUsers,
         login,
         setLogin,
         userLogin,
@@ -47,80 +47,101 @@ const Header = () => {
         return () => window.removeEventListener("resize", handleResize);
     }, [asideOpen, setAsideOpen]);
 
-    const handleLogin = (e) => {
-        // verifica si los campos de login son correctos
+    const handleLogin = async (e) => {
+        // Previene que se recargue la pagina
         e.preventDefault();
 
+        // Validamos campos de email y password
         if (!email.trim() || !password.trim()) {
             return alert("Completa todos los campos");
         }
 
-        //verifica si el usuario y contraseña son correctos
-        const founduser = users.filter(
-            (usuario) =>
-                email == usuario.correo && password == usuario.contrasena
-        );
+        try {
+            // Extraemos todos los usuarios de la base de datos para tener la info actualizada
+            const response = await axios.get(`${server}/usuarios`);
+            const usersData = response.data;
 
-        //verifica si el usuario existe
-        if (founduser.length > 0) {
-            const { id, nombre, apellido, correo, rol, telefono } =
-                founduser[0];
+            // Actualizamos el estado de usuarios con los datos más recientes
+            setUsers(usersData);
 
-            // Crear objeto de usuario
-            const newUser = {
-                id: id,
-                nombre: nombre,
-                apellido: apellido,
-                email: correo,
-                rol: rol,
-                telefono: telefono,
-            };
+            // Verificamos si el usuario y contraseña son correctos
+            const founduser = usersData.filter(
+                (usuario) =>
+                    email === usuario.correo && password === usuario.contrasena
+            );
 
-            // Actualizar estado de usuario y login
-            setUserLogin(newUser);
-            setLogin(true);
+            // Verificamos si el usuario existe
+            if (founduser.length > 0) {
+                const { id, nombre, apellido, correo, rol, telefono, activo } =
+                    founduser[0];
 
-            // Guardar en localStorage
-            localStorage.setItem("user", JSON.stringify(newUser));
+                console.log("Usuario encontrado:", founduser[0]);
 
-            // Cerrar el popup de login
-            setClicked(false);
+                // Verificamos si el usuario está activo
+                if (activo === 0) {
+                    return alert("Usuario inactivo, contacta al administrador");
+                }
 
-            // Cargar los pedidos específicos del usuario que inicia sesión
-            axios
-                .get(`${server}/pedido/${id}`)
-                .then((response) => {
-                    setPedidos(response.data);
-                    console.log("Pedidos:", response.data);
-                })
-                .catch((error) => {
-                    console.error("Error fetching restaurantes:", error);
-                });
+                // Creamos objeto de usuario
+                const newUser = {
+                    id: id,
+                    nombre: nombre,
+                    apellido: apellido,
+                    email: correo,
+                    rol: rol,
+                    telefono: telefono,
+                };
 
-            // Cargar los métodos de pago específicos del usuario que inicia sesión
-            axios
-                .get(`${server}/pago/${id}`)
-                .then((response) => {
-                    setMetodoPago(response.data);
-                    console.log("Metodos de pago:", response.data);
-                })
-                .catch((error) => {
-                    console.error("Error fetching restaurantes:", error);
-                });
+                // Actualizamos estado de usuario y login
+                setUserLogin(newUser);
+                setLogin(true);
 
-            //Cargar las direcciones específicas del usuario que inicia sesión
-            axios
-                .get(`${server}/direccion/${id}`)
-                .then((response) => {
-                    console.log("Direcciones:", response.data);
-                })
-                .catch((error) => {
-                    console.error("Error fetching direcciones:", error);
-                });
+                // Guardamos en localStorage
+                localStorage.setItem("user", JSON.stringify(newUser));
 
-            console.log(userLogin);
-        } else {
-            return alert("Usuario o contraseña incorrectos");
+                // Cerramos el popup de login
+                setClicked(false);
+
+                // Cargamos los pedidos específicos del usuario que inicia sesión
+                try {
+                    const pedidosResponse = await axios.get(
+                        `${server}/pedido/${id}`
+                    );
+                    setPedidos(pedidosResponse.data);
+                    console.log("Pedidos:", pedidosResponse.data);
+                } catch (error) {
+                    console.error("Error al cargar pedidos:", error);
+                    setPedidos([]); // En caso de error, inicializar con array vacío
+                }
+
+                // Cargamos los métodos de pago específicos del usuario que inicia sesión
+                try {
+                    const pagosResponse = await axios.get(
+                        `${server}/pago/${id}`
+                    );
+                    setMetodoPago(pagosResponse.data);
+                    console.log("Métodos de pago:", pagosResponse.data);
+                } catch (error) {
+                    console.error("Error al cargar métodos de pago:", error);
+                }
+
+                // Cargamos las direcciones específicas del usuario que inicia sesión
+                try {
+                    const direccionesResponse = await axios.get(
+                        `${server}/direccion/${id}`
+                    );
+                    console.log("Direcciones:", direccionesResponse.data);
+                } catch (error) {
+                    console.error("Error al cargar direcciones:", error);
+                }
+
+                console.log("Usuario logueado:", newUser);
+            } else {
+                return alert("Usuario o contraseña incorrectos");
+            }
+        } catch (error) {
+            console.error("Error al obtener usuarios:", error);
+            alert("Error al conectar con el servidor. Intente nuevamente.");
         }
     };
 
@@ -136,7 +157,7 @@ const Header = () => {
             rol: "cliente",
             telefono: "",
         });
-        // Limpiar los pedidos al cerrar sesión
+        // Limpiamos los pedidos al cerrar sesión
         setPedidos([]);
     };
 
@@ -177,7 +198,7 @@ const Header = () => {
 
             <NavLink to="/" className="flex items-center">
                 <img
-                    src="images/logo.png"
+                    src="/images/logo.png"
                     alt="NO JALA"
                     className="h-20 md:h-28 w-auto "
                 />
@@ -209,7 +230,7 @@ const Header = () => {
                     className="flex flex-col justify-center items-center cursor-pointer relative hover:bg-[#117449] p-1 md:p-2 rounded-md"
                 >
                     <img
-                        src="images/usr.webp"
+                        src="/images/usr.webp"
                         alt="NO JALA"
                         className="h-8 md:h-12 w-auto"
                     />
