@@ -4,6 +4,28 @@ This template provides a minimal setup to get React working in Vite with HMR and
 
 Currently, two official plugins are available:
 
+# Conexiones
+Para que este conectado todo entre sí primero haremos lo siguiente:
+- Vamos a primero importar la BD en la VM de Linux, el archivo se encuentra en `server/proyecto.sql`
+    - Para esto vamos a abrir una terminal en nuestra VM y vamos a ejecutar el siguiente comando para crear la BD:
+    ```bash
+    mysql -u tu_usuario -p -e "CREATE DATABASE proyecto;"
+    ```
+    - Después importaremos la BD con el siguiente comando (tienen que poner la ubicacion exacta en donde se encuentra el archivo), se pueden hacer de dos formas:
+     ```bash
+    cd /ruta/del/archivo/
+    mysql -u tu_usuario -p proyecto < proyecto.sql
+
+    ```
+    ```bash
+    mysql -u tu_usuario -p proyecto < /ruta/completa/a/pryoecto.sql
+    ```
+
+- Con esto ya tendremos la BD en la VM, ya solo queda checar la IP de la VM para cambiarla en las siguientes lineas de los siguientes archivos
+
+* En el archivo `server/server.js` vamos a modificar desde la *linea 14*, ya que ahi es donde hace la conexion a la BD de la VM
+* En el archivo `src/context/AppContext.jsx` vamos a modificar la *linea 7*, vamos a dejar la estructura `const server = "http://IP_DE_LA_VM:3001";`, ya con eso pueden compilar ahora si el `server.js` y el proyecto de *React*
+
 # Comandos a usar para su funcionamiento
 
 - Usar este comando para instalar todas las dependencias
@@ -30,7 +52,7 @@ npm install leaflet-defaulticon-compatibility
 
 # Backend (NodeJS)
 
-Para poder usar tambien el backend vamos a hacer lo siguiente:
+Para poder usar tambien el backend, primero vamos a abrir otra terminal y haremos lo siguiente:
 - Primero entraremos a la carpeta `/server` con el comando:
 ```bash
 cd server
@@ -44,3 +66,5 @@ npm install
 npm start
 ```
 Si todo va bien deberia aparecer el mensaje en terminal: `Server running at http://localhost:3001`
+
+
