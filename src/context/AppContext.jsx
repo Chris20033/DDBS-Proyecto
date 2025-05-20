@@ -4,7 +4,7 @@ import axios from "axios";
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-    const server = "http://192.168.0.134:3001";
+    const server = "https://3f81-148-211-67-157.ngrok-free.app";
 
     const [login, setLogin] = useState(false);
     const [users, setUsers] = useState([]);
