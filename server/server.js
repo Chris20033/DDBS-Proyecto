@@ -6,7 +6,9 @@ const app = express();
 const port = 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: 'https://ddbs-project.netlify.app'
+}));
 app.use(express.json());
 
 // MySQL connection

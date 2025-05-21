@@ -4,7 +4,7 @@ import axios from "axios";
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-    const server = "https://1662-148-211-67-157.ngrok-free.app";
+    const server = import.meta.env.VITE_API_URL;
 
     const [login, setLogin] = useState(false);
     const [users, setUsers] = useState([]);
