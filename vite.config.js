@@ -5,6 +5,10 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
+    server: {
+        host: '0.0.0.0',  // Esto permite que sea accesible desde cualquier dispositivo en la red
+        port: 5173,        // El puerto que está utilizando Vite
+    },
     plugins: [
         react(),
         tailwindcss(),
@@ -44,6 +48,10 @@ export default defineConfig({
                         type: "image/png",
                     },
                 ],
+            },
+            devOptions: {
+                enabled: true,  // Activa el service worker también en desarrollo
+                navigateFallback: '/index.html', // Necesario para que funcione en SPAs
             },
         }),
     ],
