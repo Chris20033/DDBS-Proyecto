@@ -1,6 +1,9 @@
-const express = require('express');
-const mysql = require('mysql');
-const cors = require('cors');
+import express from 'express';
+import mysql from 'mysql';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config(); // Cargar las variables de entorno
 
 const app = express();
 const port = 3001;
@@ -17,6 +20,7 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME
 });
+
 
 // Connect to MySQL
 db.connect((err) => {
