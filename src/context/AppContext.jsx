@@ -6,6 +6,11 @@ export const AppContext = createContext();
 export const AppProvider = ({ children }) => {
     const server = import.meta.env.VITE_API_URL;
 
+    // Agregar un header para saltarse la advertencia de ngrok
+    const headers = {
+        'ngrok-skip-browser-warning': 'true',  // Agregar el header en cada solicitud
+    };
+
     const [login, setLogin] = useState(false);
     const [users, setUsers] = useState([]);
     const [restaurante, setRestaurante] = useState([]);
@@ -29,7 +34,7 @@ export const AppProvider = ({ children }) => {
             setPaquetes(paquetesActualizados);
         } else {
             axios
-                .get(`${server}/paquetes`)
+                .get(`${server}/paquetes`, { headers })
                 .then((res) => setPaquetes(res.data))
                 .catch((err) =>
                     console.error("Error al cargar paquetes:", err)
@@ -47,16 +52,16 @@ export const AppProvider = ({ children }) => {
             setLogin(true);
 
             axios
-                .get(`${server}/pedido/${parsedUser.id}`)
+                .get(`${server}/pedido/${parsedUser.id}`, { headers })
                 .then((res) => setPedidos(res.data))
                 .catch(() => setPedidos([]));
 
             axios
-                .get(`${server}/pago/${parsedUser.id}`)
+                .get(`${server}/pago/${parsedUser.id}`, { headers })
                 .then((res) => setMetodoPago(res.data));
 
             axios
-                .get(`${server}/direccion/${parsedUser.id}`)
+                .get(`${server}/direccion/${parsedUser.id}`, { headers })
                 .then((res) => setDirecciones(res.data));
         } else {
             setLogin(false);
@@ -72,12 +77,12 @@ export const AppProvider = ({ children }) => {
             setPedidos([]);
         }
 
-        axios.get(`${server}/usuarios`).then((res) => setUsers(res.data));
+        axios.get(`${server}/usuarios`, { headers }).then((res) => setUsers(res.data));
 
-        axios.get(`${server}/paquetes`).then((res) => setPaquetes(res.data));
+        axios.get(`${server}/paquetes`, { headers }).then((res) => setPaquetes(res.data));
 
         axios
-            .get(`${server}/restaurantes`)
+            .get(`${server}/restaurantes`, { headers })
             .then((res) => setRestaurante(res.data));
     }, []);
 
