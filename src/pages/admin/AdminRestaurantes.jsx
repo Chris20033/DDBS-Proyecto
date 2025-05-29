@@ -40,13 +40,10 @@ const AdminRestaurantes = () => {
     // Funciones para gestionar restaurantes
     const handleActivate = (id) => {
         axios
-            .delete(
-                `${server}/restaurantes/${id}`,
-                {
-                    activo: 1,
-                },
-                { headers }
-            )
+            .delete(`${server}/restaurantes/${id}`, {
+                data: { activo: 0 },
+                headers: headers,
+            })
             .then((response) => {
                 if (response.status === 200) {
                     setRestaurante(
@@ -62,13 +59,10 @@ const AdminRestaurantes = () => {
 
     const handleDeactivate = (id) => {
         axios
-            .delete(
-                `${server}/restaurantes/${id}`,
-                {
-                    activo: 0, // Cambiar el valor de activo
-                },
-                { headers }
-            )
+            .delete(`${server}/restaurantes/${id}`, {
+                data: { activo: 1 },
+                headers: headers,
+            })
             .then((response) => {
                 if (response.status === 200) {
                     setRestaurante(
