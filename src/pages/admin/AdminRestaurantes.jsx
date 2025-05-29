@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const AdminRestaurantes = () => {
     // Extraer variables de contexto
-    const { server, userLogin, restaurante, setRestaurante } = useContext(AppContext);
+    const { server, userLogin, restaurante, setRestaurante, headers } = useContext(AppContext);
 
     // Variables de estado
     const [loading, setLoading] = useState(true);
@@ -22,75 +22,73 @@ const AdminRestaurantes = () => {
 
     // Cargar restaurantes al iniciar
     useEffect(() => {
-        const fetchRestaurantes = async () => {
-            try {
-                setLoading(true);
-                const response = await fetch(`${server}/restaurantes`);
-                if (!response.ok) {
-                    throw new Error('Error al cargar restaurantes');
-                }
-                const data = await response.json();
-                setRestaurante(data);
-                setError(null);
-            } catch (err) {
-                console.error('Error cargando restaurantes:', err);
-                setError('Error al cargar los restaurantes. Intente nuevamente.');
-            } finally {
-                setLoading(false);
-            }
+        const fetchRestaurantes = () => {
+            setLoading(true);
+            axios
+                .get(`${server}/restaurantes`, { headers })
+                .then((response) => {
+                    setRestaurante(response.data);
+                    setError(null);
+                })
+                .catch((err) => {
+                    console.error('Error cargando restaurantes:', err);
+                    setError('Error al cargar los restaurantes. Intente nuevamente.');
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
         };
 
         fetchRestaurantes();
-    }, [server, setRestaurante]);
+    }, [server, setRestaurante, headers]);
 
     // Funciones para gestionar restaurantes
-    const handleActivate = async (id) => {
-        try {
-            const response = await axios.patch(
+    const handleActivate = (id) => {
+        axios
+            .patch(
                 `${server}/restaurantes/${id}`,
                 {
                     activo: 1,
                 },
-                {
-                    headers: {
-                        'ngrok-skip-browser-warning': 'true', // Agregar el header para evitar la advertencia
-                    },
+                { headers }
+            )
+            .then((response) => {
+                if (response.status === 200) {
+                    setRestaurante(
+                        restaurante.map((rest) =>
+                            rest.id === id ? { ...rest, activo: 1 } : rest
+                        )
+                    );
                 }
-            );
-
-            if (response.status === 200) {
-                setRestaurante(
-                    restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 1 } : rest))
-                );
-            }
-        } catch (error) {
-            console.error('Error al activar el restaurante:', error);
-            alert('Error al activar el restaurante');
-        }
+            })
+            .catch((error) => {
+                console.error('Error al activar el restaurante:', error);
+                alert('Error al activar el restaurante');
+            });
     };
 
-    const handleDeactivate = async (id) => {
-        try {
-            const response = await axios.patch(
+    const handleDeactivate = (id) => {
+        axios
+            .patch(
                 `${server}/restaurantes/${id}`,
                 {
                     activo: 0, // Cambiar el valor de activo
                 },
-                {
-                    headers: {
-                        'ngrok-skip-browser-warning': 'true', // Agregar el header para evitar la advertencia de ngrok
-                    },
+                { headers }
+            )
+            .then((response) => {
+                if (response.status === 200) {
+                    setRestaurante(
+                        restaurante.map((rest) =>
+                            rest.id === id ? { ...rest, activo: 0 } : rest
+                        )
+                    );
                 }
-            );
-            if (response.status === 200) {
-                setRestaurante(
-                    restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 0 } : rest))
-                );
-            }
-        } catch (error) {
-            console.error('Error al desactivar el restaurante:', error);
-            alert('Error al desactivar el restaurante');
-        }
+            })
+            .catch((error) => {
+                console.error('Error al desactivar el restaurante:', error);
+                alert('Error al desactivar el restaurante');
+            });
     };
 
     // Manejo del formulario
@@ -102,27 +100,23 @@ const AdminRestaurantes = () => {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
 
-        try {
-            // Crear nuevo restaurante
-            const response = await axios.post(`${server}/restaurantes`, formData, {
-                headers: {
-                    'ngrok-skip-browser-warning': 'true', 
-                },
+        axios
+            .post(`${server}/restaurantes`, formData, { headers })
+            .then((response) => {
+                if (response.status === 201 || response.status === 200) {
+                    setRestaurante([...restaurante, response.data]);
+                    alert('Restaurante creado correctamente');
+                }
+                resetForm();
+                setShowModal(false);
+            })
+            .catch((error) => {
+                console.error('Error al guardar el restaurante:', error);
+                alert('Error al guardar el restaurante');
             });
-            if (response.status === 201 || response.status === 200) {
-                setRestaurante([...restaurante, response.data]);
-                alert('Restaurante creado correctamente');
-            }
-
-            resetForm();
-            setShowModal(false);
-        } catch (error) {
-            console.error('Error al guardar el restaurante:', error);
-            alert('Error al guardar el restaurante');
-        }
     };
 
     const resetForm = () => {
