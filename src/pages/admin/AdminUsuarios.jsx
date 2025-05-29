@@ -11,57 +11,61 @@ const AdminUsuarios = () => {
 
     // Cargar usuarios al cargar el componente
     useEffect(() => {
-        const fetchUsuarios = async () => {
-            const response = await fetch(`${server}/usuarios`);
-            const data = await response.json();
-            setUsuarios(data);
-        };
-        fetchUsuarios();
+        axios
+            .get(`${server}/usuarios`)
+            .then((response) => {
+                setUsuarios(response.data);
+            })
+            .catch((error) => {
+                console.error("Error al cargar usuarios:", error);
+            });
     }, []);
 
-    //Funciones
-    //Funcion para activar un usuario
-    const handleActivate = async (id) => {
-        try {
-            const response = await axios.delete(`${server}/usuarios/${id}`, {
-                activo: 1,
-            }, {
+    // Funciones
+    // Funcion para activar un usuario
+    const handleActivate = (id) => {
+        axios
+            .delete(`${server}/usuarios/${id}`, {
+                data: { activo: 1 },
                 headers: {
-                    'ngrok-skip-browser-warning': 'true', 
+                    'ngrok-skip-browser-warning': 'true',
+                },
+            })
+            .then((response) => {
+                if (response.status === 200) {
+                    setUsuarios(
+                        usuarios.map((usuario) =>
+                            usuario.id === id ? { ...usuario, activo: 1 } : usuario
+                        )
+                    );
                 }
+            })
+            .catch((error) => {
+                console.error("Error al activar el usuario:", error);
             });
-            if (response.status === 200) {
-                setUsuarios(
-                    usuarios.map((usuario) =>
-                        usuario.id === id ? { ...usuario, activo: 1 } : usuario
-                    )
-                );
-            }
-        } catch (error) {
-            console.error("Error al activar el usuario:", error);
-        }
     };
 
-    //Funcion para desactivar un usuario
-    const handleDeactivate = async (id) => {
-        try {
-            const response = await axios.delete(`${server}/usuarios/${id}`, {
-                activo: 0,
-            },{
+    // Funcion para desactivar un usuario
+    const handleDeactivate = (id) => {
+        axios
+            .delete(`${server}/usuarios/${id}`, {
+                data: { activo: 0 },
                 headers: {
-                    'ngrok-skip-browser-warning': 'true', 
+                    'ngrok-skip-browser-warning': 'true',
+                },
+            })
+            .then((response) => {
+                if (response.status === 200) {
+                    setUsuarios(
+                        usuarios.map((usuario) =>
+                            usuario.id === id ? { ...usuario, activo: 0 } : usuario
+                        )
+                    );
                 }
+            })
+            .catch((error) => {
+                console.error("Error al desactivar el usuario:", error);
             });
-            if (response.status === 200) {
-                setUsuarios(
-                    usuarios.map((usuario) =>
-                        usuario.id === id ? { ...usuario, activo: 0 } : usuario
-                    )
-                );
-            }
-        } catch (error) {
-            console.error("Error al desactivar el usuario:", error);
-        }
     };
 
     return (
@@ -71,7 +75,7 @@ const AdminUsuarios = () => {
                     <div className="container mx-auto p-4">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">
-                                Administración de Restaurantes
+                                Administración de Usuarios
                             </h2>
                             <button
                                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
