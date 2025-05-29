@@ -14,9 +14,7 @@ const LocationMarker = ({ setFormData }) => {
             const { lat, lng } = e.latlng;
             setPosition([lat, lng]);
 
-            fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
-            )
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
                 .then((response) => response.json())
                 .then((data) => {
                     const address = data.address || {};
@@ -151,6 +149,7 @@ const Direccion = () => {
     const deleteDireccion = (id) => {
         axios
             .delete(`${server}/direccion/${id}`, {
+                data: { activo: direcciones.find((d) => d.id === id)?.activo === 1 ? 0 : 1 },
                 headers: { 'ngrok-skip-browser-warning': 'true' },
             })
             .then(() => {
@@ -194,26 +193,31 @@ const Direccion = () => {
                         <h3 className="text-lg font-semibold mb-2 text-green-700">
                             Rellena los datos restantes:
                         </h3>
-                        {[{ label: 'Calle', name: 'calle' }, { label: 'Número', name: 'numero' }, { label: 'Colonia', name: 'colonia' }, { label: 'Ciudad', name: 'ciudad' }, { label: 'Estado', name: 'estado' }, { label: 'Código Postal', name: 'codigo_postal', maxLength: 5 }].map(
-                            ({ label, name, maxLength }) => (
-                                <div key={name}>
-                                    <label className="block text-gray-700 font-medium mb-1">
-                                        {label}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name={name}
-                                        value={formData[name]}
-                                        onChange={handleChange}
-                                        className={`w-full px-3 py-2 border rounded-md ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
-                                        {...(maxLength && { maxLength })}
-                                    />
-                                    {errors[name] && (
-                                        <p className="text-red-500 text-sm">{errors[name]}</p>
-                                    )}
-                                </div>
-                            )
-                        )}
+                        {[
+                            { label: 'Calle', name: 'calle' },
+                            { label: 'Número', name: 'numero' },
+                            { label: 'Colonia', name: 'colonia' },
+                            { label: 'Ciudad', name: 'ciudad' },
+                            { label: 'Estado', name: 'estado' },
+                            { label: 'Código Postal', name: 'codigo_postal', maxLength: 5 },
+                        ].map(({ label, name, maxLength }) => (
+                            <div key={name}>
+                                <label className="block text-gray-700 font-medium mb-1">
+                                    {label}
+                                </label>
+                                <input
+                                    type="text"
+                                    name={name}
+                                    value={formData[name]}
+                                    onChange={handleChange}
+                                    className={`w-full px-3 py-2 border rounded-md ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
+                                    {...(maxLength && { maxLength })}
+                                />
+                                {errors[name] && (
+                                    <p className="text-red-500 text-sm">{errors[name]}</p>
+                                )}
+                            </div>
+                        ))}
 
                         <div className="mt-6">
                             <button
@@ -255,7 +259,9 @@ const Direccion = () => {
                                 </div>
                             ))
                         ) : (
-                            <p className="text-red-500 mt-4">No tienes ninguna dirección guardada.</p>
+                            <p className="text-red-500 mt-4">
+                                No tienes ninguna dirección guardada.
+                            </p>
                         )}
                     </div>
                 </>

@@ -148,6 +148,7 @@ const Pago = () => {
     function deletePay(id) {
         axios
             .delete(`${server}/pago/${id}`, {
+                data: { activo: metodoPago.find((pago) => pago.id === id)?.activo === 1 ? 0 : 1 },
                 headers: {
                     'ngrok-skip-browser-warning': 'true',
                 },

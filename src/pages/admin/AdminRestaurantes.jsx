@@ -41,7 +41,7 @@ const AdminRestaurantes = () => {
     const handleActivate = (id) => {
         axios
             .delete(`${server}/restaurantes/${id}`, {
-                data: { activo: 0 },
+                data: { activo: 1 },
                 headers: headers,
             })
             .then((response) => {
@@ -60,7 +60,7 @@ const AdminRestaurantes = () => {
     const handleDeactivate = (id) => {
         axios
             .delete(`${server}/restaurantes/${id}`, {
-                data: { activo: 1 },
+                data: { activo: 0 },
                 headers: headers,
             })
             .then((response) => {
