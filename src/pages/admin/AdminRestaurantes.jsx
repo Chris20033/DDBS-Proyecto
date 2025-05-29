@@ -4,11 +4,12 @@ import axios from 'axios';
 
 const AdminRestaurantes = () => {
     // Extraer variables de contexto
-    const { server, userLogin, restaurante, setRestaurante, headers } = useContext(AppContext);
+    const { server, userLogin, headers } = useContext(AppContext);
 
     // Variables de estado
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [restaurante, setRestaurante] = useState([]); // Asegúrate de que restaurante sea un array
 
     // Modal para crear restaurante
     const [showModal, setShowModal] = useState(false);
@@ -22,28 +23,19 @@ const AdminRestaurantes = () => {
 
     // Cargar restaurantes al iniciar
     useEffect(() => {
-        const fetchRestaurantes = () => {
-            setLoading(true);
-            axios
-                .get(`${server}/restaurantes`, { headers })
-                .then((response) => {
-                    setRestaurante(response.data);
-                    setError(null);
-                })
-                .catch((err) => {
-                    console.error('Error cargando restaurantes:', err);
-                    setError('Error al cargar los restaurantes. Intente nuevamente.');
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        };
-
-        // Solo llamar a fetchRestaurantes si no hay datos previos
-        if (!restaurante.length) {
-            fetchRestaurantes();
-        }
-    }, [server, setRestaurante, headers, restaurante.length]); // Sólo se vuelve a ejecutar si el restaurante está vacío
+        axios
+            .get(`${server}/restaurantes`, { headers })
+            .then((response) => {
+                setLoading(false);
+                if (response.status !== 200) {
+                    throw new Error('Error al cargar los restaurantes');
+                }
+                setRestaurante(response.data); // Guardar los usuarios en el estado
+            })
+            .catch((error) => {
+                console.error("Error al cargar usuarios:", error);
+            });
+    }, [server, headers]); 
 
     // Funciones para gestionar restaurantes
     const handleActivate = (id) => {
