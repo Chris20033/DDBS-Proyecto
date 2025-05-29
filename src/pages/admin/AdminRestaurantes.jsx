@@ -33,14 +33,14 @@ const AdminRestaurantes = () => {
                 setRestaurante(response.data); // Guardar los usuarios en el estado
             })
             .catch((error) => {
-                console.error("Error al cargar usuarios:", error);
+                console.error('Error al cargar usuarios:', error);
             });
-    }, [server, headers]); 
+    }, [server, headers]);
 
     // Funciones para gestionar restaurantes
     const handleActivate = (id) => {
         axios
-            .patch(
+            .delete(
                 `${server}/restaurantes/${id}`,
                 {
                     activo: 1,
@@ -50,9 +50,7 @@ const AdminRestaurantes = () => {
             .then((response) => {
                 if (response.status === 200) {
                     setRestaurante(
-                        restaurante.map((rest) =>
-                            rest.id === id ? { ...rest, activo: 1 } : rest
-                        )
+                        restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 1 } : rest))
                     );
                 }
             })
@@ -64,7 +62,7 @@ const AdminRestaurantes = () => {
 
     const handleDeactivate = (id) => {
         axios
-            .patch(
+            .delete(
                 `${server}/restaurantes/${id}`,
                 {
                     activo: 0, // Cambiar el valor de activo
@@ -74,9 +72,7 @@ const AdminRestaurantes = () => {
             .then((response) => {
                 if (response.status === 200) {
                     setRestaurante(
-                        restaurante.map((rest) =>
-                            rest.id === id ? { ...rest, activo: 0 } : rest
-                        )
+                        restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 0 } : rest))
                     );
                 }
             })
