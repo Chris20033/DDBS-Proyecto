@@ -4,22 +4,22 @@ import axios from "axios";
 
 const AdminUsuarios = () => {
     // Extraer variables de entorno
-    const { server, userLogin } = useContext(AppContext);
+    const { server, userLogin, headers } = useContext(AppContext);
 
     // Variables de componente
-    const [usuarios, setUsuarios] = useState([]);
+    const [usuarios, setUsuarios] = useState([]); // Asegúrate de que usuarios sea un array
 
     // Cargar usuarios al cargar el componente
     useEffect(() => {
         axios
-            .get(`${server}/usuarios`)
+            .get(`${server}/usuarios`, { headers })
             .then((response) => {
-                setUsuarios(response.data);
+                setUsuarios(response.data); // Guardar los usuarios en el estado
             })
             .catch((error) => {
                 console.error("Error al cargar usuarios:", error);
             });
-    }, []);
+    }, [server, headers]); // Dependencia para asegurarse de que la petición se ejecute al cambio de headers
 
     // Funciones
     // Funcion para activar un usuario
@@ -27,9 +27,7 @@ const AdminUsuarios = () => {
         axios
             .delete(`${server}/usuarios/${id}`, {
                 data: { activo: 1 },
-                headers: {
-                    'ngrok-skip-browser-warning': 'true',
-                },
+                headers: headers, // Aseguramos que se pase el header
             })
             .then((response) => {
                 if (response.status === 200) {
@@ -50,9 +48,7 @@ const AdminUsuarios = () => {
         axios
             .delete(`${server}/usuarios/${id}`, {
                 data: { activo: 0 },
-                headers: {
-                    'ngrok-skip-browser-warning': 'true',
-                },
+                headers: headers, // Aseguramos que se pase el header
             })
             .then((response) => {
                 if (response.status === 200) {
@@ -99,7 +95,7 @@ const AdminUsuarios = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {usuarios.map((usuario) => (
+                                {Array.isArray(usuarios) && usuarios.map((usuario) => (
                                     <tr key={usuario.id} className="border-b hover:bg-gray-50">
                                         <td className="py-2 px-4 text-center">
                                             {usuario.id}
