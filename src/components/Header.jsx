@@ -59,7 +59,7 @@ const Header = () => {
 
         try {
             // Extraemos todos los usuarios de la base de datos para tener la info actualizada
-            const response = await axios.get(`${server}/usuarios`, headers);
+            const response = await axios.get(`${server}/usuarios`, {headers});
             const usersData = response.data;
 
             // Actualizamos el estado de usuarios con los datos más recientes
@@ -106,7 +106,7 @@ const Header = () => {
                 // Cargamos los pedidos específicos del usuario que inicia sesión
                 try {
                     const pedidosResponse = await axios.get(
-                        `${server}/pedido/${id}`, headers
+                        `${server}/pedido/${id}`, {headers}
                     );
                     setPedidos(pedidosResponse.data);
                     console.log("Pedidos:", pedidosResponse.data);
@@ -118,7 +118,7 @@ const Header = () => {
                 // Cargamos los métodos de pago específicos del usuario que inicia sesión
                 try {
                     const pagosResponse = await axios.get(
-                        `${server}/pago/${id}`, headers
+                        `${server}/pago/${id}`,{ headers}
                     );
                     setMetodoPago(pagosResponse.data);
                     console.log("Métodos de pago:", pagosResponse.data);
@@ -129,7 +129,7 @@ const Header = () => {
                 // Cargamos las direcciones específicas del usuario que inicia sesión
                 try {
                     const direccionesResponse = await axios.get(
-                        `${server}/direccion/${id}`, headers
+                        `${server}/direccion/${id}`,{ headers}
                     );
                     console.log("Direcciones:", direccionesResponse.data);
                 } catch (error) {

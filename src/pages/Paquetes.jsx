@@ -174,7 +174,7 @@ const Paquetes = () => {
 
                 setPaquetes(paquetesActualizados);
 
-                const PedidosActualizados = await axios.get(`${server}/pedido/${userLogin.id}`, headers);
+                const PedidosActualizados = await axios.get(`${server}/pedido/${userLogin.id}`, {headers});
                 setPedidos(PedidosActualizados.data);
 
                 setTimeout(() => setMensaje(''), 5000);

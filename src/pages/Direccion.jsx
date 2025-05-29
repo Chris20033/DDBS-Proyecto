@@ -48,7 +48,7 @@ const Direccion = () => {
     useEffect(() => {
         const fetchDirecciones = async () => {
             try {
-                const response = await axios.get(`${server}/direccion/${userLogin?.id}`, headers);
+                const response = await axios.get(`${server}/direccion/${userLogin?.id}`, {headers});
                 setDirecciones(response.data);
             } catch (error) {
                 console.error('Error al cargar direcciones:', error);
@@ -125,7 +125,7 @@ const Direccion = () => {
             });
             alert('Dirección registrada con éxito');
 
-            const updated = await axios.get(`${server}/direccion/${userLogin?.id}`, headers);
+            const updated = await axios.get(`${server}/direccion/${userLogin?.id}`, {headers});
             setDirecciones(updated.data);
 
             setFormData({

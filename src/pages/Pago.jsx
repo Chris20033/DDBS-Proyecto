@@ -119,7 +119,7 @@ const Pago = () => {
                 // Actualizar el estado de métodos de pago
                 // Obtener métodos de pago del usuario
                 axios
-                    .get(`${server}/pago/${userLogin?.id}`, headers)
+                    .get(`${server}/pago/${userLogin?.id}`, {headers})
                     .then((response) => {
                         setMetodoPago(response.data);
                         console.log('Métodos de pago:', response.data);
