@@ -10,6 +10,7 @@ const AdminRestaurantes = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [restaurante, setRestaurante] = useState([]); // Asegúrate de que restaurante sea un array
+    const [usersRestaurantes, setUsersRestaurantes] = useState([]);
 
     // Modal para crear restaurante
     const [showModal, setShowModal] = useState(false);
@@ -26,16 +27,28 @@ const AdminRestaurantes = () => {
         axios
             .get(`${server}/restaurantes`, { headers })
             .then((response) => {
-                setLoading(false);
                 if (response.status !== 200) {
                     throw new Error('Error al cargar los restaurantes');
                 }
-                setRestaurante(response.data); // Guardar los usuarios en el estado
+                setRestaurante(response.data);
             })
             .catch((error) => {
                 console.error('Error al cargar usuarios:', error);
             });
-    }, [server, headers]);
+
+        axios
+            .get(`${server}/usuariosrestaurantes`, { headers })
+            .then((res) => {
+                setUsersRestaurantes(res.data);
+                setLoading(false);
+                console.log('Usuarios de restaurantes cargados:', res.data);
+            })
+            .catch((error) => {
+                console.error('Error al cargar usuarios de restaurantes:', error);
+                setError('Error al cargar los usuarios de restaurantes');
+            });
+
+    }, []);
 
     // Funciones para gestionar restaurantes
     const handleActivate = (id) => {
@@ -283,6 +296,24 @@ const AdminRestaurantes = () => {
                                             step="0.1"
                                             required
                                         />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium mb-1">
+                                            Usuario Responsable
+                                        </label>
+                                        <select
+                                            name="admin_restaurante"
+                                            onChange={handleChange}
+                                            className="w-full p-2 border rounded"
+                                            required
+                                        >
+                                            {usersRestaurantes.map((user) => (
+                                                <option key={user.id} value={user.id}>
+                                                    {user.nombre} {user.apellido}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     <div className="flex justify-end gap-2">

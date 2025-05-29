@@ -1,5 +1,5 @@
-import { createContext, useEffect, useState } from "react";
-import axios from "axios";
+import { createContext, useEffect, useState } from 'react';
+import axios from 'axios';
 
 export const AppContext = createContext();
 
@@ -8,7 +8,7 @@ export const AppProvider = ({ children }) => {
 
     // Agregar un header para saltarse la advertencia de ngrok
     const headers = {
-        'ngrok-skip-browser-warning': 'true',  // Agregar el header en cada solicitud
+        'ngrok-skip-browser-warning': 'true', // Agregar el header en cada solicitud
     };
 
     const [login, setLogin] = useState(false);
@@ -20,14 +20,15 @@ export const AppProvider = ({ children }) => {
     const [direcciones, setDirecciones] = useState([]);
     const [asideOpen, setAsideOpen] = useState(false); // Nuevo estado para controlar la visibilidad del aside
     const [userLogin, setUserLogin] = useState({
-        id: "",
-        nombre: "",
-        apellido: "",
-        email: "",
-        password: "",
-        rol: "cliente",
-        telefono: "",
+        id: '',
+        nombre: '',
+        apellido: '',
+        email: '',
+        password: '',
+        rol: 'cliente',
+        telefono: '',
     });
+    const [selectedRestaurante, setselectedRestaurante ] = useState(null);
 
     const actualizarPaquetes = (paquetesActualizados) => {
         if (paquetesActualizados) {
@@ -36,14 +37,12 @@ export const AppProvider = ({ children }) => {
             axios
                 .get(`${server}/paquetes`, { headers })
                 .then((res) => setPaquetes(res.data))
-                .catch((err) =>
-                    console.error("Error al cargar paquetes:", err)
-                );
+                .catch((err) => console.error('Error al cargar paquetes:', err));
         }
     };
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
+        const storedUser = localStorage.getItem('user');
         let parsedUser = null;
 
         if (storedUser) {
@@ -51,10 +50,11 @@ export const AppProvider = ({ children }) => {
             setUserLogin(parsedUser);
             setLogin(true);
 
+            // Si el usuario está logueado, hacer las peticiones necesarias
             axios
                 .get(`${server}/pedido/${parsedUser.id}`, { headers })
                 .then((res) => setPedidos(res.data))
-                .catch(() => setPedidos([]));
+                .catch(() => setPedidos([])); // En caso de error, inicializar con array vacío
 
             axios
                 .get(`${server}/pago/${parsedUser.id}`, { headers })
@@ -64,26 +64,26 @@ export const AppProvider = ({ children }) => {
                 .get(`${server}/direccion/${parsedUser.id}`, { headers })
                 .then((res) => setDirecciones(res.data));
         } else {
+            // Si no hay usuario logueado, inicializa los estados a sus valores por defecto
             setLogin(false);
             setUserLogin({
-                id: "",
-                nombre: "",
-                apellido: "",
-                email: "",
-                password: "",
-                rol: "cliente",
-                telefono: "",
+                id: '',
+                nombre: '',
+                apellido: '',
+                email: '',
+                password: '',
+                rol: 'cliente',
+                telefono: '',
             });
             setPedidos([]);
         }
 
+        // Las siguientes peticiones siempre se ejecutan
         axios.get(`${server}/usuarios`, { headers }).then((res) => setUsers(res.data));
 
         axios.get(`${server}/paquetes`, { headers }).then((res) => setPaquetes(res.data));
 
-        axios
-            .get(`${server}/restaurantes`, { headers })
-            .then((res) => setRestaurante(res.data));
+        axios.get(`${server}/restaurantes`, { headers }).then((res) => setRestaurante(res.data));
     }, []);
 
     return (
@@ -109,7 +109,9 @@ export const AppProvider = ({ children }) => {
                 setUserLogin,
                 actualizarPaquetes,
                 asideOpen,
-                setAsideOpen, // Añadir el nuevo estado al contexto
+                setAsideOpen,
+                selectedRestaurante,
+                setselectedRestaurante,
             }}
         >
             {children}
