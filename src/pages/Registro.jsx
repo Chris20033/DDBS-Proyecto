@@ -108,7 +108,11 @@ const Registro = () => {
 
         // Guardar el nuevo usuario en el servidor (opcional)
         axios
-            .post(`${server}/usuarios`, newUser)
+            .post(`${server}/usuarios`, newUser, {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true',
+                },
+            })
             .then((response) => {
                 console.log("Usuario registrado:", response.data);
             })

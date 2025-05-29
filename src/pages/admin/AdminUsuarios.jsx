@@ -25,6 +25,10 @@ const AdminUsuarios = () => {
         try {
             const response = await axios.delete(`${server}/usuarios/${id}`, {
                 activo: 1,
+            }, {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true', 
+                }
             });
             if (response.status === 200) {
                 setUsuarios(
@@ -43,6 +47,10 @@ const AdminUsuarios = () => {
         try {
             const response = await axios.delete(`${server}/usuarios/${id}`, {
                 activo: 0,
+            },{
+                headers: {
+                    'ngrok-skip-browser-warning': 'true', 
+                }
             });
             if (response.status === 200) {
                 setUsuarios(

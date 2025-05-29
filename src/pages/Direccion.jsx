@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import axios from 'axios';
-import { useContext } from "react";
-import { AppContext } from "../context/AppContext";
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 import L from 'leaflet';
 
 // Componente interno para seleccionar la ubicación en el mapa
@@ -15,11 +15,13 @@ const LocationMarker = ({ setFormData }) => {
             setPosition([lat, lng]);
 
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+                );
                 const data = await response.json();
                 const address = data.address || {};
 
-                setFormData(prev => ({
+                setFormData((prev) => ({
                     ...prev,
                     calle: address.road || '',
                     numero: address.house_number || '',
@@ -40,12 +42,13 @@ const LocationMarker = ({ setFormData }) => {
 };
 
 const Direccion = () => {
-    const { userLogin, server, login, direcciones, setDirecciones } = useContext(AppContext);
+    const { userLogin, server, login, direcciones, setDirecciones, headers } =
+        useContext(AppContext);
 
     useEffect(() => {
         const fetchDirecciones = async () => {
             try {
-                const response = await axios.get(`${server}/direccion/${userLogin?.id}`);
+                const response = await axios.get(`${server}/direccion/${userLogin?.id}`, headers);
                 setDirecciones(response.data);
             } catch (error) {
                 console.error('Error al cargar direcciones:', error);
@@ -53,7 +56,7 @@ const Direccion = () => {
         };
         fetchDirecciones();
     }, [userLogin, server, setDirecciones]);
-    
+
     const [formData, setFormData] = useState({
         usuario_id: userLogin?.id,
         calle: '',
@@ -115,10 +118,14 @@ const Direccion = () => {
         try {
             const nuevaDireccion = { ...formData };
 
-            await axios.post(`${server}/direccion`, nuevaDireccion);
+            await axios.post(`${server}/direccion`, nuevaDireccion, {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true', // Aquí agregamos el header para evitar la advertencia
+                },
+            });
             alert('Dirección registrada con éxito');
 
-            const updated = await axios.get(`${server}/direccion/${userLogin?.id}`);
+            const updated = await axios.get(`${server}/direccion/${userLogin?.id}`, headers);
             setDirecciones(updated.data);
 
             setFormData({
@@ -141,16 +148,22 @@ const Direccion = () => {
     };
 
     const deleteDireccion = (id) => {
-        axios.delete(`${server}/direccion/${id}`)
-            .then(() => {
-                alert('Dirección eliminada con éxito');
-                setDirecciones(direcciones.filter((direccion) => direccion.id !== id));
-            })
-            .catch((error) => {
-                console.error('Error al eliminar dirección:', error);
-                alert('Error al eliminar la dirección');
-            });
-    };
+    axios
+        .delete(`${server}/direccion/${id}`, {
+            headers: {
+                'ngrok-skip-browser-warning': 'true',  // Agregar el header para saltar la advertencia
+            }
+        })
+        .then(() => {
+            alert('Dirección eliminada con éxito');
+            setDirecciones(direcciones.filter((direccion) => direccion.id !== id));
+        })
+        .catch((error) => {
+            console.error('Error al eliminar dirección:', error);
+            alert('Error al eliminar la dirección');
+        });
+};
+
 
     return (
         <div className="w-full max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
@@ -164,9 +177,14 @@ const Direccion = () => {
                         <h3 className="text-lg font-semibold mb-2 text-green-700">
                             Selecciona tu dirección en el mapa:
                         </h3>
-                        <MapContainer className='z-10' center={[21.881866, -102.293879]} zoom={12} style={{ height: "300px", width: "100%" }}>
+                        <MapContainer
+                            className="z-10"
+                            center={[21.881866, -102.293879]}
+                            zoom={12}
+                            style={{ height: '300px', width: '100%' }}
+                        >
                             <TileLayer
-                                attribution='&copy; OpenStreetMap contributors'
+                                attribution="&copy; OpenStreetMap contributors"
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
                             <LocationMarker setFormData={setFormData} />
@@ -184,7 +202,7 @@ const Direccion = () => {
                             { label: 'Colonia', name: 'colonia' },
                             { label: 'Ciudad', name: 'ciudad' },
                             { label: 'Estado', name: 'estado' },
-                            { label: 'Código Postal', name: 'codigo_postal', maxLength: 5 }
+                            { label: 'Código Postal', name: 'codigo_postal', maxLength: 5 },
                         ].map(({ label, name, maxLength }) => (
                             <div key={name}>
                                 <label className="block text-gray-700 font-medium mb-1">
@@ -228,7 +246,9 @@ const Direccion = () => {
                                     <h3 className="text-green-700 font-semibold">
                                         Dirección Guardada:
                                     </h3>
-                                    <p>Calle: {direccion.calle} #{direccion.numero}</p>
+                                    <p>
+                                        Calle: {direccion.calle} #{direccion.numero}
+                                    </p>
                                     <p>Colonia: {direccion.colonia}</p>
                                     <p>Ciudad: {direccion.ciudad}</p>
                                     <p>Estado: {direccion.estado}</p>

@@ -89,6 +89,7 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider
             value={{
+                headers,
                 server,
                 login,
                 setLogin,

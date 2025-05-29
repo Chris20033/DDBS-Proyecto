@@ -1,11 +1,10 @@
-import { useState, useEffect, useContext } from "react";
-import { AppContext } from "../../context/AppContext";
-import axios from "axios";
+import { useState, useEffect, useContext } from 'react';
+import { AppContext } from '../../context/AppContext';
+import axios from 'axios';
 
 const AdminRestaurantes = () => {
     // Extraer variables de contexto
-    const { server, userLogin, restaurante, setRestaurante } =
-        useContext(AppContext);
+    const { server, userLogin, restaurante, setRestaurante } = useContext(AppContext);
 
     // Variables de estado
     const [loading, setLoading] = useState(true);
@@ -14,11 +13,11 @@ const AdminRestaurantes = () => {
     // Modal para crear restaurante
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
-        nombre_sucursal: "",
-        direccion: "",
-        latitud: "",
-        longitud: "",
-        rating_google: "0",
+        nombre_sucursal: '',
+        direccion: '',
+        latitud: '',
+        longitud: '',
+        rating_google: '0',
     });
 
     // Cargar restaurantes al iniciar
@@ -28,16 +27,14 @@ const AdminRestaurantes = () => {
                 setLoading(true);
                 const response = await fetch(`${server}/restaurantes`);
                 if (!response.ok) {
-                    throw new Error("Error al cargar restaurantes");
+                    throw new Error('Error al cargar restaurantes');
                 }
                 const data = await response.json();
                 setRestaurante(data);
                 setError(null);
             } catch (err) {
-                console.error("Error cargando restaurantes:", err);
-                setError(
-                    "Error al cargar los restaurantes. Intente nuevamente."
-                );
+                console.error('Error cargando restaurantes:', err);
+                setError('Error al cargar los restaurantes. Intente nuevamente.');
             } finally {
                 setLoading(false);
             }
@@ -49,37 +46,50 @@ const AdminRestaurantes = () => {
     // Funciones para gestionar restaurantes
     const handleActivate = async (id) => {
         try {
-            const response = await axios.patch(`${server}/restaurantes/${id}`, {
-                activo: 1,
-            });
+            const response = await axios.patch(
+                `${server}/restaurantes/${id}`,
+                {
+                    activo: 1,
+                },
+                {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true', // Agregar el header para evitar la advertencia
+                    },
+                }
+            );
+
             if (response.status === 200) {
                 setRestaurante(
-                    restaurante.map((rest) =>
-                        rest.id === id ? { ...rest, activo: 1 } : rest
-                    )
+                    restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 1 } : rest))
                 );
             }
         } catch (error) {
-            console.error("Error al activar el restaurante:", error);
-            alert("Error al activar el restaurante");
+            console.error('Error al activar el restaurante:', error);
+            alert('Error al activar el restaurante');
         }
     };
 
     const handleDeactivate = async (id) => {
         try {
-            const response = await axios.patch(`${server}/restaurantes/${id}`, {
-                activo: 0,
-            });
+            const response = await axios.patch(
+                `${server}/restaurantes/${id}`,
+                {
+                    activo: 0, // Cambiar el valor de activo
+                },
+                {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true', // Agregar el header para evitar la advertencia de ngrok
+                    },
+                }
+            );
             if (response.status === 200) {
                 setRestaurante(
-                    restaurante.map((rest) =>
-                        rest.id === id ? { ...rest, activo: 0 } : rest
-                    )
+                    restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 0 } : rest))
                 );
             }
         } catch (error) {
-            console.error("Error al desactivar el restaurante:", error);
-            alert("Error al desactivar el restaurante");
+            console.error('Error al desactivar el restaurante:', error);
+            alert('Error al desactivar el restaurante');
         }
     };
 
@@ -97,41 +107,40 @@ const AdminRestaurantes = () => {
 
         try {
             // Crear nuevo restaurante
-            const response = await axios.post(
-                `${server}/restaurantes`,
-                formData
-            );
+            const response = await axios.post(`${server}/restaurantes`, formData, {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true', 
+                },
+            });
             if (response.status === 201 || response.status === 200) {
                 setRestaurante([...restaurante, response.data]);
-                alert("Restaurante creado correctamente");
+                alert('Restaurante creado correctamente');
             }
 
             resetForm();
             setShowModal(false);
         } catch (error) {
-            console.error("Error al guardar el restaurante:", error);
-            alert("Error al guardar el restaurante");
+            console.error('Error al guardar el restaurante:', error);
+            alert('Error al guardar el restaurante');
         }
     };
 
     const resetForm = () => {
         setFormData({
-            nombre_sucursal: "",
-            direccion: "",
-            latitud: "",
-            longitud: "",
-            rating_google: "0",
+            nombre_sucursal: '',
+            direccion: '',
+            latitud: '',
+            longitud: '',
+            rating_google: '0',
         });
     };
 
     return (
         <>
-            {userLogin.rol === "admin" ? (
+            {userLogin.rol === 'admin' ? (
                 <div className="container mx-auto p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">
-                            Administración de Restaurantes
-                        </h2>
+                        <h2 className="text-xl font-bold">Administración de Restaurantes</h2>
                         <button
                             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                             onClick={() => {
@@ -152,24 +161,12 @@ const AdminRestaurantes = () => {
                             <table className="min-w-full bg-white border">
                                 <thead className="bg-gray-100">
                                     <tr>
-                                        <th className="py-2 px-4 border-b">
-                                            ID
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Nombre
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Dirección
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Coordenadas
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Rating
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Estado
-                                        </th>
+                                        <th className="py-2 px-4 border-b">ID</th>
+                                        <th className="py-2 px-4 border-b">Nombre</th>
+                                        <th className="py-2 px-4 border-b">Dirección</th>
+                                        <th className="py-2 px-4 border-b">Coordenadas</th>
+                                        <th className="py-2 px-4 border-b">Rating</th>
+                                        <th className="py-2 px-4 border-b">Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -188,32 +185,21 @@ const AdminRestaurantes = () => {
                                                 {restaurante.direccion}
                                             </td>
                                             <td className="py-2 px-4 text-center">
-                                                {restaurante.latitud},{" "}
-                                                {restaurante.longitud}
+                                                {restaurante.latitud}, {restaurante.longitud}
                                             </td>
                                             <td className="py-2 px-4 text-center">
-                                                {"★".repeat(
-                                                    Math.floor(
-                                                        restaurante.rating_google
-                                                    )
-                                                ) +
-                                                    "☆".repeat(
-                                                        5 -
-                                                            Math.floor(
-                                                                restaurante.rating_google
-                                                            )
+                                                {'★'.repeat(Math.floor(restaurante.rating_google)) +
+                                                    '☆'.repeat(
+                                                        5 - Math.floor(restaurante.rating_google)
                                                     )}
                                             </td>
                                             <td className="py-2 px-4 text-center">
                                                 <div className="flex justify-center">
-                                                    {restaurante.activo ===
-                                                    0 ? (
+                                                    {restaurante.activo === 0 ? (
                                                         <button
                                                             className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
                                                             onClick={() =>
-                                                                handleActivate(
-                                                                    restaurante.id
-                                                                )
+                                                                handleActivate(restaurante.id)
                                                             }
                                                         >
                                                             Activar
@@ -222,9 +208,7 @@ const AdminRestaurantes = () => {
                                                         <button
                                                             className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                                             onClick={() =>
-                                                                handleDeactivate(
-                                                                    restaurante.id
-                                                                )
+                                                                handleDeactivate(restaurante.id)
                                                             }
                                                         >
                                                             Desactivar
