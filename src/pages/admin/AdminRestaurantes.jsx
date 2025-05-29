@@ -39,8 +39,11 @@ const AdminRestaurantes = () => {
                 });
         };
 
-        fetchRestaurantes();
-    }, [server, setRestaurante, headers]);
+        // Solo llamar a fetchRestaurantes si no hay datos previos
+        if (!restaurante.length) {
+            fetchRestaurantes();
+        }
+    }, [server, setRestaurante, headers, restaurante.length]); // Sólo se vuelve a ejecutar si el restaurante está vacío
 
     // Funciones para gestionar restaurantes
     const handleActivate = (id) => {
