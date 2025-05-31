@@ -1,39 +1,40 @@
-import { NavLink } from "react-router-dom";
-import { useContext } from "react";
-import { AppContext } from "../context/AppContext";
+import { NavLink } from 'react-router-dom';
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 
 const Aside = () => {
     const { userLogin, asideOpen, setAsideOpen } = useContext(AppContext);
 
+    // Define las opciones de menú según el rol
     const asideOptions = [
-        { id: 1, nombre: "Inicio", rol: "cliente" },
-        { id: 2, nombre: "Restaurantes", rol: "cliente" },
-        { id: 3, nombre: "Paquetes", rol: "cliente" },
-        { id: 4, nombre: "Pedidos", rol: "cliente" },
-        { id: 5, nombre: "Direccion", rol: "cliente" },
-        { id: 6, nombre: "Pago", rol: "cliente" },
-        { id: 7, nombre: "Administrador", rol: "admin" },
+        { id: 1, nombre: 'Inicio', roles: ['cliente', 'admin', 'restaurante'] },
+        { id: 2, nombre: 'Restaurantes', roles: ['cliente', 'admin', 'restaurante'] },
+        { id: 3, nombre: 'Paquetes', roles: ['cliente'] },
+        { id: 4, nombre: 'Pedidos', roles: ['cliente'] },
+        { id: 5, nombre: 'Direccion', roles: ['cliente'] },
+        { id: 6, nombre: 'Pago', roles: ['cliente'] },
+        { id: 7, nombre: 'Administrador', roles: ['admin', 'restaurante'] },
     ];
 
     // Cerrar el menú en móviles al hacer clic en un enlace
     const handleLinkClick = () => {
         if (window.innerWidth <= 768 && asideOpen) {
             setAsideOpen(false);
-            document.body.classList.remove("menu-open");
+            document.body.classList.remove('menu-open');
         }
     };
 
     return (
         <div
             id="aside"
-            className={`bg-[#3d3c3c] w-48 text-white pt-7 h-full ${asideOpen ? "active" : ""}`}
+            className={`bg-[#3d3c3c] w-48 text-white pt-7 h-full ${asideOpen ? 'active' : ''}`}
         >
             {/* Botón para cerrar en la versión móvil */}
             <button
                 className="md:hidden absolute top-2 right-2 text-white p-1"
                 onClick={() => {
                     setAsideOpen(false);
-                    document.body.classList.remove("menu-open");
+                    document.body.classList.remove('menu-open');
                 }}
             >
                 <svg
@@ -54,12 +55,8 @@ const Aside = () => {
 
             <ul className="flex flex-col items-center gap-4 w-full">
                 {asideOptions.map((option) => {
-                    if (
-                        (option.rol === "admin" &&
-                            (userLogin.rol === "admin" ||
-                                userLogin.rol === "restaurante")) ||
-                        option.rol === "cliente"
-                    ) {
+                    // Mostrar la opción solo si el rol del usuario está en la lista de roles permitidos
+                    if (option.roles.includes(userLogin.rol)) {
                         return (
                             <li
                                 key={option.id}
