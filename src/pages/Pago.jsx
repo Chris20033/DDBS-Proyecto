@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useContext } from "react";
-import { AppContext } from "../context/AppContext";
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 
 const Pago = () => {
-    const { userLogin, server, metodoPago, setMetodoPago, login } = useContext(AppContext);
+    const { userLogin, server, metodoPago, setMetodoPago, login, headers } = useContext(AppContext);
 
     // Estado para almacenar los datos del formulario
     const [formData, setFormData] = useState({
@@ -103,11 +103,15 @@ const Pago = () => {
             numero_tarjeta: formData.numero_tarjeta,
             fecha_expiracion: formData.fecha_expiracion,
             codigo_seguridad: formData.codigo_seguridad,
-        }
+        };
 
         // Enviar datos de pago al servidor
         axios
-            .post(`${server}/pago/`, newPago)
+            .post(`${server}/pago/`, newPago, {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true', // Agregar el header para saltar la advertencia
+                },
+            })
             .then((response) => {
                 console.log('Método de pago guardado:', response.data);
                 alert('Método de pago registrado con éxito');
@@ -115,7 +119,7 @@ const Pago = () => {
                 // Actualizar el estado de métodos de pago
                 // Obtener métodos de pago del usuario
                 axios
-                    .get(`${server}/pago/${userLogin?.id}`)
+                    .get(`${server}/pago/${userLogin?.id}`, {headers})
                     .then((response) => {
                         setMetodoPago(response.data);
                         console.log('Métodos de pago:', response.data);
@@ -139,20 +143,25 @@ const Pago = () => {
             .finally(() => {
                 setIsSubmitting(false);
             });
-
-            
     };
 
-    function deletePay (id)  {
-
-        axios.delete(`${server}/pago/${id}`).then((response) => {
-            console.log('Método de pago eliminado:', response.data);
-            alert('Método de pago eliminado con éxito');
-            setMetodoPago(metodoPago.filter((metodo) => metodo.id !== id));
-        }).catch((error) => {
-            console.error('Error al eliminar método de pago:', error);
-            alert('Error al eliminar el método de pago');
-        });
+    function deletePay(id) {
+        axios
+            .delete(`${server}/pago/${id}`, {
+                data: { activo: metodoPago.find((pago) => pago.id === id)?.activo === 1 ? 0 : 1 },
+                headers: {
+                    'ngrok-skip-browser-warning': 'true',
+                },
+            })
+            .then((response) => {
+                console.log('Método de pago eliminado:', response.data);
+                alert('Método de pago eliminado con éxito');
+                setMetodoPago(metodoPago.filter((metodo) => metodo.id !== id));
+            })
+            .catch((error) => {
+                console.error('Error al eliminar método de pago:', error);
+                alert('Error al eliminar el método de pago');
+            });
     }
 
     return (
@@ -288,33 +297,38 @@ const Pago = () => {
                         </div>
                     </form>
                     <div className="mt-8 bg-gray-300 p-4 rounded-md text-green-700 font-semibold">
-                    {metodoPago.length > 0 ? (
-                        metodoPago.map((metodoPago) => (
-                            <div key={metodoPago.id} className="mt-4 p-4 bg-green-50 rounded-md border border-green-200">
-                                <h3 className="text-green-700 font-semibold">
-                                    Método de Pago Guardado:
-                                </h3>
-                                <p>Tipo: {metodoPago.tipo}</p>
-                                <p>Número de tarjeta: {metodoPago.numero_tarjeta}</p>
-                                <p>Fecha de expiración: {metodoPago.fecha_expiracion}</p>
-                                <button className='bg-red-700 text-white p-2 mt-4' onClick={() => deletePay(metodoPago.id)}>Eliminar</button>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-red-500 mt-4">
-                            No tienes ningún método de pago guardado.
-                        </p>
-                    )}
-                        
-                   
-                </div>
+                        {metodoPago.length > 0 ? (
+                            metodoPago.map((metodoPago) => (
+                                <div
+                                    key={metodoPago.id}
+                                    className="mt-4 p-4 bg-green-50 rounded-md border border-green-200"
+                                >
+                                    <h3 className="text-green-700 font-semibold">
+                                        Método de Pago Guardado:
+                                    </h3>
+                                    <p>Tipo: {metodoPago.tipo}</p>
+                                    <p>Número de tarjeta: {metodoPago.numero_tarjeta}</p>
+                                    <p>Fecha de expiración: {metodoPago.fecha_expiracion}</p>
+                                    <button
+                                        className="bg-red-700 text-white p-2 mt-4"
+                                        onClick={() => deletePay(metodoPago.id)}
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-red-500 mt-4">
+                                No tienes ningún método de pago guardado.
+                            </p>
+                        )}
+                    </div>
                 </>
             ) : (
                 <div className="text-center mt-6">
                     <p className="text-red-500 font-semibold text-lg">
                         Debe iniciar sesión para agregar un método de pago.
                     </p>
-                    
                 </div>
             )}
         </div>

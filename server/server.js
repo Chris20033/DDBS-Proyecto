@@ -1,12 +1,32 @@
-import express from 'express';
-import mysql from 'mysql';
-import cors from 'cors';
-import dotenv from 'dotenv';
+const express = require('express');
+const https = require('https');
+const fs = require('fs');
+const mysql = require('mysql');
+const cors = require('cors');
 
-dotenv.config(); // Cargar las variables de entorno
+// Constantes para imagenes
+const multer = require('multer');
+const path = require('path');
+
+// Configuración de almacenamiento de imágenes
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); // El directorio donde se almacenarán las imágenes
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+
+if (!fs.existsSync('uploads/')) {
+    fs.mkdirSync('uploads/');
+}
 
 const app = express();
 const port = 3001;
+const IP = '192.168.100.206'
 
 // Middleware
 app.use(cors());
@@ -14,11 +34,10 @@ app.use(express.json());
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+  host: IP,
+  user: 'lnxarchitect',
+  password: 'Sun*+0001',
+  database: 'proyecto'
 });
 
 
@@ -35,7 +54,7 @@ db.connect((err) => {
 
 //USUARIOS
 app.get('/usuarios', (req, res) => {
-    db.query('SELECT * FROM USUARIO', (err, results) => {
+    db.query('SELECT * FROM USUARIO WHERE activo = 1;', (err, results) => {
         if (err) {
         console.error('Error fetching usuarios:', err);
         res.status(500).send('Error fetching usuarios');
@@ -45,6 +64,22 @@ app.get('/usuarios', (req, res) => {
         console.log("Usuarios fetched successfully");
     });
 });
+
+app.get('/usuariosrestaurantes', (req, res) => {
+    db.query(
+        'SELECT u.id, u.nombre, u.apellido, u.correo, u.telefono, u.rol, u.activo FROM USUARIO u LEFT JOIN RESTAURANTE r ON u.id = r.admin_restaurante_id WHERE r.admin_restaurante_id IS NULL and u.rol="restaurante" AND u.activo=1;',
+        (err, results) => {
+            if (err) {
+                console.error('Error fetching usuarios:', err);
+                res.status(500).send('Error fetching usuarios');
+                return;
+            }
+            res.json(results);
+            console.log("Usuarios restaurantes fetched successfully");
+        }
+    );
+});
+
 
 app.post('/usuarios', (req, res) => {
     const { nombre, apellido, correo, telefono, contrasena, rol  } = req.body;
@@ -81,7 +116,7 @@ app.delete('/usuarios/:id', (req, res) => {
 
 //RESTAURANTES
 app.get('/restaurantes', (req, res) => {
-    db.query('SELECT * FROM RESTAURANTE', (err, results) => {
+    db.query('SELECT * FROM RESTAURANTE WHERE activo = 1;', (err, results) => {
         if (err) {
         console.error('Error fetching restaurantes:', err);
         res.status(500).send('Error fetching restaurantes');
@@ -89,6 +124,73 @@ app.get('/restaurantes', (req, res) => {
         }
         res.json(results);
         console.log("Restaurantes fetched successfully");
+    });
+});
+
+app.post('/restaurantes', (req, res) => {
+    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let google_place_id = '';
+    for (let i = 0; i < 8; i++) {
+        const aleatorio = Math.floor(Math.random() * caracteres.length);
+        google_place_id += caracteres.charAt(aleatorio);
+    }
+
+    // Obtener los valores del cuerpo de la solicitud
+    const { nombre_sucursal, direccion, latitud, longitud, rating_google, admin_restaurante_id } = req.body;
+
+    // Validar que todos los campos necesarios estén presentes
+    if (!nombre_sucursal || !direccion || !admin_restaurante_id || !latitud || !longitud || !rating_google) {
+        return res.status(400).send('All fields are required');
+    }
+
+    // Realizar la consulta SQL para insertar los datos
+    db.query(
+        'INSERT INTO RESTAURANTE (nombre_sucursal, direccion, latitud, longitud, google_place_id, rating_google, admin_restaurante_id, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [nombre_sucursal, direccion, latitud, longitud, google_place_id, rating_google, admin_restaurante_id, 1], // Se asigna `1` al campo `activo`
+        (err, results) => {
+            if (err) {
+                console.error('Error inserting restaurante:', err);
+                res.status(500).send('Error inserting restaurante');
+                return;
+            }
+            res.status(201).json({ results });
+            console.log("Restaurante created successfully");
+        }
+    );
+});
+
+
+app.get('/restaurantes/:id', (req, res) => {
+    const id = req.params.id;
+    db.query('SELECT r.* FROM RESTAURANTE r INNER JOIN USUARIO u ON r.admin_restaurante_id = u.id WHERE u.id = ? AND r.activo = 1;', [id], (err, results) => {
+        if (err) {
+            console.error('Error fetching restaurante:', err);
+            res.status(500).send('Error fetching restaurante');
+            return;
+        }
+        if (results.length === 0) {
+            return res.status(404).send('Restaurante not found');
+        }
+        res.json(results);
+        console.log("Restaurante fetched successfully");
+    }
+    );
+})
+
+app.delete('/restaurantes/:id', (req, res) => {
+    const id = req.params.id;
+    const { activo } = req.body;
+    if (!id || activo === undefined) {
+        return res.status(400).send('ID and activo status are required');
+    }
+    db.query('UPDATE RESTAURANTE SET activo = ? WHERE id = ?', [activo, id], (err) => {
+        if (err) {
+            console.error('Error updating restaurante:', err);
+            res.status(500).send('Error updating restaurante');
+            return;
+        }
+        res.status(200).send('Restaurante updated successfully');
+        console.log("Restaurante updated successfully");
     });
 });
 
@@ -111,6 +213,60 @@ app.get('/paquetes', (req, res) => {
         console.log("Paquetes fetched successfully");
     });
 });
+
+app.get('/paquetes/restaurante/:id', (req, res) => {
+    const id = req.params.id;
+    db.query('SELECT * FROM PAQUETE WHERE restaurante_id = ? AND activo = 1;', [id], (err, results) => {
+        if (err) {
+            console.error('Error fetching paquetes for restaurant:', err);
+            res.status(500).send('Error fetching paquetes for restaurant');
+            return;
+        }
+        res.json(results);
+        console.log("Paquetes for restaurant fetched successfully");
+    });
+})
+
+app.post('/paquetes', upload.single('imagen'), (req, res) => {
+    console.log(req.file); 
+    console.log(req.body);
+    const { nombre_paquete, descripcion, precio, stock, fecha_vencimiento, restaurante_id } = req.body;
+
+    // Obtener el archivo subido
+    const imagenUrl = req.file ? `/uploads/${req.file.filename}` : null; // Guardar la URL de la imagen
+
+    if (!nombre_paquete || !descripcion || !precio || !stock || !fecha_vencimiento || !restaurante_id) {
+        return res.status(400).send('Todos los campos son requeridos');
+    }
+
+    // Aquí insertaríamos el paquete en la base de datos
+    const query = 'INSERT INTO PAQUETE (nombre_paquete, descripcion, imagen, precio, stock, fecha_vencimiento, restaurante_id, activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+    db.query(query, [nombre_paquete, descripcion, imagenUrl, precio, stock, fecha_vencimiento, restaurante_id, 1], (err, result) => {
+        if (err) {
+            console.error('Error insertando paquete:', err);
+            return res.status(500).send('Error al crear paquete');
+        }
+        res.status(201).json({ id: result.insertId, imagen_url: imagenUrl });
+    });
+});
+
+app.delete('/paquetes/:id', (req, res) => {
+    const id = req.params.id;
+    const { activo } = req.body;
+    if (!id || activo === undefined) {
+        return res.status(400).send('ID and activo status are required');
+    }
+    db.query('UPDATE PAQUETE SET activo = ? WHERE id = ?', [activo, id], (err) => {
+        if (err) {
+            console.error('Error updating paquete:', err);
+            res.status(500).send('Error updating paquete');
+            return;
+        }
+        res.status(200).send('Paquete updated successfully');
+        console.log("Paquete updated successfully");
+    });
+}
+);
 
 // Actualizar el stock de un paquete
 app.put('/paquete/stock/:id', (req, res) => {
@@ -168,7 +324,7 @@ app.get('/direccion/:iduser', (req, res) => {
     if (!iduser) {
         return res.status(400).send('User ID is required');
     }
-    db.query('SELECT d.id, d.calle, d.numero, d.colonia, d.ciudad, d.estado, d.codigo_postal, d.latitud, d.longitud FROM DIRECCION d INNER JOIN USUARIO u ON d.usuario_id = u.id WHERE u.id = ?;', [iduser], (err, results) => {
+    db.query('SELECT d.id, d.calle, d.numero, d.colonia, d.ciudad, d.estado, d.codigo_postal, d.latitud, d.longitud, d.activo FROM DIRECCION d INNER JOIN USUARIO u ON d.usuario_id = u.id WHERE u.id = ? AND d.activo = 1;', [iduser], (err, results) => {
         if (err) {
         console.error('Error fetching direccion:', err);
         res.status(500).send('Error fetching direccion');
@@ -197,10 +353,11 @@ app.post('/direccion', (req, res) => {
 
 app.delete('/direccion/:id', (req, res) => {
     const id = req.params.id;
+    const { activo } = req.body;
     if (!id) {
         return res.status(400).send('ID is required');
     }
-    db.query('DELETE FROM DIRECCION WHERE id = ?', [id], (err) => {
+    db.query('UPDATE DIRECCION SET activo = ? WHERE id = ?', [activo, id], (err) => {
         if (err) {
             console.error('Error deleting direccion:', err);
             res.status(500).send('Error deleting direccion');
@@ -217,7 +374,7 @@ app.get('/pago/:iduser', (req, res) => {
     if (!iduser) {
         return res.status(400).send('User ID is required');
     }
-    db.query('SELECT p.id, p.tipo, p.numero_tarjeta, p.fecha_expiracion, p.codigo_seguridad FROM METODO_PAGO p INNER JOIN USUARIO u ON p.usuario_id = u.id WHERE u.id = ?;', [iduser], (err, results) => {
+    db.query('SELECT p.id, p.tipo, p.numero_tarjeta, p.fecha_expiracion, p.codigo_seguridad, p.activo FROM METODO_PAGO p INNER JOIN USUARIO u ON p.usuario_id = u.id WHERE u.id = ? AND p.activo = 1;', [iduser], (err, results) => {
         if (err) {
         console.error('Error fetching pago:', err);
         res.status(500).send('Error fetching pago');
@@ -246,10 +403,11 @@ app.post('/pago', (req, res) => {
 
 app.delete('/pago/:id', (req, res) => {
     const id = req.params.id;
+    const { activo } = req.body;
     if (!id) {
         return res.status(400).send('ID is required');
     }
-    db.query('DELETE FROM METODO_PAGO WHERE id = ?', [id], (err) => {
+    db.query('UPDATE METODO_PAGO SET activo = ? WHERE id = ?', [activo, id], (err) => {
         if (err) {
             console.error('Error deleting pago:', err);
             res.status(500).send('Error deleting pago');
@@ -412,28 +570,19 @@ app.get('/pedidos/usuario/:userId', (req, res) => {
 
 // Crear un nuevo pedido
 app.post('/pedido', (req, res) => {
+
     // Extraer datos del pedido
-    const { usuario_id, fecha_pedido, direccion_id, metodo_pago_id, tipo_entrega, total, estatus } = req.body;
+    const { usuario_id, direccion_id, metodo_pago_id, tipo_entrega, total, estatus } = req.body;
     
     // Validar datos
     if (!usuario_id || !direccion_id || !metodo_pago_id || !total) {
         return res.status(400).send('Se requieren todos los campos obligatorios para el pedido');
     }
+        const datePart = new Date().toLocaleDateString();
+        const timePart = new Date().toLocaleTimeString().slice(0, 8);
+        const [day, month, year] = datePart.split('/');
+        const fechaPedido = `${year}-${month}-${day} ${timePart}`;
     
-    // Formatear fecha con zona horaria de México Central (UTC-6)
-    let fechaPedido;
-    if (fecha_pedido) {
-        // Si proporcionan una fecha, usarla
-        fechaPedido = fecha_pedido;
-    } else {
-        // Crear fecha actual en México Central (UTC-6)
-        const now = new Date();
-        
-        // Método correcto para obtener fecha local de México:
-        // 1. Crear objeto de fecha en formato ISO con ajuste para México
-        const mexicoTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Mexico_City"}));
-        fechaPedido = mexicoTime.toISOString().slice(0, 19).replace('T', ' ');
-    }
     
     const estadoPedido = estatus || 'En proceso';
     const tipoEntregaPedido = tipo_entrega || 'domicilio';
@@ -492,6 +641,9 @@ app.post('/detalle-pedido', (req, res) => {
     );
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Servidor corriendo en https://${IP}:${port}`);
 });
+

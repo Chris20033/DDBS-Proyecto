@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import axios from 'axios';
-import { useContext } from "react";
-import { AppContext } from "../context/AppContext";
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext';
 import L from 'leaflet';
 
 // Componente interno para seleccionar la ubicación en el mapa
@@ -10,29 +10,29 @@ const LocationMarker = ({ setFormData }) => {
     const [position, setPosition] = useState(null);
 
     useMapEvents({
-        click: async (e) => {
+        click: (e) => {
             const { lat, lng } = e.latlng;
             setPosition([lat, lng]);
 
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
-                const data = await response.json();
-                const address = data.address || {};
-
-                setFormData(prev => ({
-                    ...prev,
-                    calle: address.road || '',
-                    numero: address.house_number || '',
-                    colonia: address.suburb || address.neighbourhood || '',
-                    ciudad: address.city || address.town || address.village || '',
-                    estado: address.state || '',
-                    codigo_postal: address.postcode || '',
-                    latitud: lat.toString(),
-                    longitud: lng.toString(),
-                }));
-            } catch (error) {
-                console.error('Error en reverse geocoding:', error);
-            }
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    const address = data.address || {};
+                    setFormData((prev) => ({
+                        ...prev,
+                        calle: address.road || '',
+                        numero: address.house_number || '',
+                        colonia: address.suburb || address.neighbourhood || '',
+                        ciudad: address.city || address.town || address.village || '',
+                        estado: address.state || '',
+                        codigo_postal: address.postcode || '',
+                        latitud: lat.toString(),
+                        longitud: lng.toString(),
+                    }));
+                })
+                .catch((error) => {
+                    console.error('Error en reverse geocoding:', error);
+                });
         },
     });
 
@@ -40,20 +40,21 @@ const LocationMarker = ({ setFormData }) => {
 };
 
 const Direccion = () => {
-    const { userLogin, server, login, direcciones, setDirecciones } = useContext(AppContext);
+    const { userLogin, server, login, direcciones, setDirecciones, headers } =
+        useContext(AppContext);
 
     useEffect(() => {
-        const fetchDirecciones = async () => {
-            try {
-                const response = await axios.get(`${server}/direccion/${userLogin?.id}`);
-                setDirecciones(response.data);
-            } catch (error) {
-                console.error('Error al cargar direcciones:', error);
-            }
+        const fetchDirecciones = () => {
+            axios
+                .get(`${server}/direccion/${userLogin?.id}`, { headers })
+                .then((response) => setDirecciones(response.data))
+                .catch((error) => {
+                    console.error('Error al cargar direcciones:', error);
+                });
         };
         fetchDirecciones();
     }, [userLogin, server, setDirecciones]);
-    
+
     const [formData, setFormData] = useState({
         usuario_id: userLogin?.id,
         calle: '',
@@ -100,7 +101,7 @@ const Direccion = () => {
         return newErrors;
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         formData.usuario_id = userLogin?.id;
@@ -112,36 +113,45 @@ const Direccion = () => {
             return;
         }
 
-        try {
-            const nuevaDireccion = { ...formData };
+        const nuevaDireccion = { ...formData };
 
-            await axios.post(`${server}/direccion`, nuevaDireccion);
-            alert('Dirección registrada con éxito');
-
-            const updated = await axios.get(`${server}/direccion/${userLogin?.id}`);
-            setDirecciones(updated.data);
-
-            setFormData({
-                usuario_id: userLogin?.id,
-                calle: '',
-                numero: '',
-                colonia: '',
-                ciudad: '',
-                estado: '',
-                codigo_postal: '',
-                latitud: '0',
-                longitud: '0',
+        axios
+            .post(`${server}/direccion`, nuevaDireccion, {
+                headers: { 'ngrok-skip-browser-warning': 'true' },
+            })
+            .then(() => {
+                alert('Dirección registrada con éxito');
+                return axios.get(`${server}/direccion/${userLogin?.id}`, { headers });
+            })
+            .then((updated) => {
+                setDirecciones(updated.data);
+                setFormData({
+                    usuario_id: userLogin?.id,
+                    calle: '',
+                    numero: '',
+                    colonia: '',
+                    ciudad: '',
+                    estado: '',
+                    codigo_postal: '',
+                    latitud: '0',
+                    longitud: '0',
+                });
+            })
+            .catch((error) => {
+                console.error('Error al guardar dirección:', error);
+                alert('Error al registrar la dirección');
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
-        } catch (error) {
-            console.error('Error al guardar dirección:', error);
-            alert('Error al registrar la dirección');
-        } finally {
-            setIsSubmitting(false);
-        }
     };
 
     const deleteDireccion = (id) => {
-        axios.delete(`${server}/direccion/${id}`)
+        axios
+            .delete(`${server}/direccion/${id}`, {
+                data: { activo: direcciones.find((d) => d.id === id)?.activo === 1 ? 0 : 1 },
+                headers: { 'ngrok-skip-browser-warning': 'true' },
+            })
             .then(() => {
                 alert('Dirección eliminada con éxito');
                 setDirecciones(direcciones.filter((direccion) => direccion.id !== id));
@@ -164,9 +174,14 @@ const Direccion = () => {
                         <h3 className="text-lg font-semibold mb-2 text-green-700">
                             Selecciona tu dirección en el mapa:
                         </h3>
-                        <MapContainer className='z-10' center={[21.881866, -102.293879]} zoom={12} style={{ height: "300px", width: "100%" }}>
+                        <MapContainer
+                            className="z-10"
+                            center={[21.881866, -102.293879]}
+                            zoom={12}
+                            style={{ height: '300px', width: '100%' }}
+                        >
                             <TileLayer
-                                attribution='&copy; OpenStreetMap contributors'
+                                attribution="&copy; OpenStreetMap contributors"
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
                             <LocationMarker setFormData={setFormData} />
@@ -184,7 +199,7 @@ const Direccion = () => {
                             { label: 'Colonia', name: 'colonia' },
                             { label: 'Ciudad', name: 'ciudad' },
                             { label: 'Estado', name: 'estado' },
-                            { label: 'Código Postal', name: 'codigo_postal', maxLength: 5 }
+                            { label: 'Código Postal', name: 'codigo_postal', maxLength: 5 },
                         ].map(({ label, name, maxLength }) => (
                             <div key={name}>
                                 <label className="block text-gray-700 font-medium mb-1">
@@ -195,9 +210,7 @@ const Direccion = () => {
                                     name={name}
                                     value={formData[name]}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-md ${
-                                        errors[name] ? 'border-red-500' : 'border-gray-300'
-                                    }`}
+                                    className={`w-full px-3 py-2 border rounded-md ${errors[name] ? 'border-red-500' : 'border-gray-300'}`}
                                     {...(maxLength && { maxLength })}
                                 />
                                 {errors[name] && (
@@ -228,7 +241,9 @@ const Direccion = () => {
                                     <h3 className="text-green-700 font-semibold">
                                         Dirección Guardada:
                                     </h3>
-                                    <p>Calle: {direccion.calle} #{direccion.numero}</p>
+                                    <p>
+                                        Calle: {direccion.calle} #{direccion.numero}
+                                    </p>
                                     <p>Colonia: {direccion.colonia}</p>
                                     <p>Ciudad: {direccion.ciudad}</p>
                                     <p>Estado: {direccion.estado}</p>

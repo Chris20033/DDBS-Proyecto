@@ -6,6 +6,7 @@ import { AppContext } from "../context/AppContext";
 
 const Header = () => {
     const {
+        headers,
         setUsers,
         login,
         setLogin,
@@ -47,7 +48,7 @@ const Header = () => {
         return () => window.removeEventListener("resize", handleResize);
     }, [asideOpen, setAsideOpen]);
 
-    const handleLogin = async (e) => {
+    const handleLogin = (e) => {
         // Previene que se recargue la pagina
         e.preventDefault();
 
@@ -56,93 +57,95 @@ const Header = () => {
             return alert("Completa todos los campos");
         }
 
-        try {
-            // Extraemos todos los usuarios de la base de datos para tener la info actualizada
-            const response = await axios.get(`${server}/usuarios`);
-            const usersData = response.data;
+        // Extraemos todos los usuarios de la base de datos para tener la info actualizada
+        axios
+            .get(`${server}/usuarios`, { headers })
+            .then((response) => {
+                const usersData = response.data;
 
-            // Actualizamos el estado de usuarios con los datos más recientes
-            setUsers(usersData);
+                // Actualizamos el estado de usuarios con los datos más recientes
+                setUsers(usersData);
 
-            // Verificamos si el usuario y contraseña son correctos
-            const founduser = usersData.filter(
-                (usuario) =>
-                    email === usuario.correo && password === usuario.contrasena
-            );
+                // Verificamos si el usuario y contraseña son correctos
+                const founduser = usersData.filter(
+                    (usuario) =>
+                        email === usuario.correo && password === usuario.contrasena
+                );
 
-            // Verificamos si el usuario existe
-            if (founduser.length > 0) {
-                const { id, nombre, apellido, correo, rol, telefono, activo } =
-                    founduser[0];
+                // Verificamos si el usuario existe
+                if (founduser.length > 0) {
+                    const { id, nombre, apellido, correo, rol, telefono, activo } =
+                        founduser[0];
 
-                console.log("Usuario encontrado:", founduser[0]);
+                    console.log("Usuario encontrado:", founduser[0]);
 
-                // Verificamos si el usuario está activo
-                if (activo === 0) {
-                    return alert("Usuario inactivo, contacta al administrador");
+                    // Verificamos si el usuario está activo
+                    if (activo === 0) {
+                        return alert("Usuario inactivo, contacta al administrador");
+                    }
+
+                    // Creamos objeto de usuario
+                    const newUser = {
+                        id: id,
+                        nombre: nombre,
+                        apellido: apellido,
+                        email: correo,
+                        rol: rol,
+                        telefono: telefono,
+                    };
+
+                    // Actualizamos estado de usuario y login
+                    setUserLogin(newUser);
+                    setLogin(true);
+
+                    // Guardamos en localStorage
+                    localStorage.setItem("user", JSON.stringify(newUser));
+
+                    // Cerramos el popup de login
+                    setClicked(false);
+
+                    // Cargamos los pedidos específicos del usuario que inicia sesión
+                    axios
+                        .get(`${server}/pedido/${id}`, { headers })
+                        .then((pedidosResponse) => {
+                            setPedidos(pedidosResponse.data);
+                            console.log("Pedidos:", pedidosResponse.data);
+                        })
+                        .catch((error) => {
+                            console.error("Error al cargar pedidos:", error);
+                            setPedidos([]); // En caso de error, inicializar con array vacío
+                        });
+
+                    // Cargamos los métodos de pago específicos del usuario que inicia sesión
+                    axios
+                        .get(`${server}/pago/${id}`, { headers })
+                        .then((pagosResponse) => {
+                            setMetodoPago(pagosResponse.data);
+                            console.log("Métodos de pago:", pagosResponse.data);
+                        })
+                        .catch((error) => {
+                            console.error("Error al cargar métodos de pago:", error);
+                        });
+
+                    // Cargamos las direcciones específicas del usuario que inicia sesión
+                    axios
+                        .get(`${server}/direccion/${id}`, { headers })
+                        .then((direccionesResponse) => {
+                            console.log("Direcciones:", direccionesResponse.data);
+                        })
+                        .catch((error) => {
+                            console.error("Error al cargar direcciones:", error);
+                        });
+
+                    console.log("Usuario logueado:", newUser);
+                } else {
+                    return alert("Usuario o contraseña incorrectos");
                 }
-
-                // Creamos objeto de usuario
-                const newUser = {
-                    id: id,
-                    nombre: nombre,
-                    apellido: apellido,
-                    email: correo,
-                    rol: rol,
-                    telefono: telefono,
-                };
-
-                // Actualizamos estado de usuario y login
-                setUserLogin(newUser);
-                setLogin(true);
-
-                // Guardamos en localStorage
-                localStorage.setItem("user", JSON.stringify(newUser));
-
-                // Cerramos el popup de login
-                setClicked(false);
-
-                // Cargamos los pedidos específicos del usuario que inicia sesión
-                try {
-                    const pedidosResponse = await axios.get(
-                        `${server}/pedido/${id}`
-                    );
-                    setPedidos(pedidosResponse.data);
-                    console.log("Pedidos:", pedidosResponse.data);
-                } catch (error) {
-                    console.error("Error al cargar pedidos:", error);
-                    setPedidos([]); // En caso de error, inicializar con array vacío
-                }
-
-                // Cargamos los métodos de pago específicos del usuario que inicia sesión
-                try {
-                    const pagosResponse = await axios.get(
-                        `${server}/pago/${id}`
-                    );
-                    setMetodoPago(pagosResponse.data);
-                    console.log("Métodos de pago:", pagosResponse.data);
-                } catch (error) {
-                    console.error("Error al cargar métodos de pago:", error);
-                }
-
-                // Cargamos las direcciones específicas del usuario que inicia sesión
-                try {
-                    const direccionesResponse = await axios.get(
-                        `${server}/direccion/${id}`
-                    );
-                    console.log("Direcciones:", direccionesResponse.data);
-                } catch (error) {
-                    console.error("Error al cargar direcciones:", error);
-                }
-
-                console.log("Usuario logueado:", newUser);
-            } else {
-                return alert("Usuario o contraseña incorrectos");
-            }
-        } catch (error) {
-            console.error("Error al obtener usuarios:", error);
-            alert("Error al conectar con el servidor. Intente nuevamente.");
-        }
+            })
+            .catch((error) => {
+                console.error("Error al obtener usuarios:", error);
+                alert("Error al conectar con el servidor. Intente nuevamente.");
+            });
     };
 
     const handleLogout = () => {

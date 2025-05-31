@@ -1,86 +1,103 @@
-import { useState, useEffect, useContext } from "react";
-import { AppContext } from "../../context/AppContext";
-import axios from "axios";
+import { useState, useEffect, useContext } from 'react';
+import { AppContext } from '../../context/AppContext';
+import axios from 'axios';
 
 const AdminRestaurantes = () => {
     // Extraer variables de contexto
-    const { server, userLogin, restaurante, setRestaurante } =
-        useContext(AppContext);
+    const { server, userLogin, headers } = useContext(AppContext);
 
     // Variables de estado
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [restaurante, setRestaurante] = useState([]); // Asegúrate de que restaurante sea un array
+    const [usersRestaurantes, setUsersRestaurantes] = useState([]);
 
     // Modal para crear restaurante
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
-        nombre_sucursal: "",
-        direccion: "",
-        latitud: "",
-        longitud: "",
-        rating_google: "0",
+        nombre_sucursal: '',
+        direccion: '',
+        latitud: '',
+        longitud: '',
+        rating_google: '0',
     });
 
     // Cargar restaurantes al iniciar
-    useEffect(() => {
-        const fetchRestaurantes = async () => {
-            try {
-                setLoading(true);
-                const response = await fetch(`${server}/restaurantes`);
-                if (!response.ok) {
-                    throw new Error("Error al cargar restaurantes");
-                }
-                const data = await response.json();
-                setRestaurante(data);
-                setError(null);
-            } catch (err) {
-                console.error("Error cargando restaurantes:", err);
-                setError(
-                    "Error al cargar los restaurantes. Intente nuevamente."
-                );
-            } finally {
-                setLoading(false);
+useEffect(() => {
+    axios
+        .get(`${server}/restaurantes`, { headers })
+        .then((response) => {
+            if (response.status !== 200) {
+                throw new Error('Error al cargar los restaurantes');
             }
-        };
+            setRestaurante(response.data);
+        })
+        .catch((error) => {
+            console.error('Error al cargar restaurantes:', error);
+        });
 
-        fetchRestaurantes();
-    }, [server, setRestaurante]);
+    axios
+        .get(`${server}/usuariosrestaurantes`, { headers })
+        .then((res) => {
+            // Ordenar los usuarios de restaurantes
+            const sortedUsers = res.data.sort((a, b) => {
+                if (a.nombre.toLowerCase() < b.nombre.toLowerCase()) {
+                    return -1; // 'a' es menor, 'a' irá primero
+                }
+                if (a.nombre.toLowerCase() > b.nombre.toLowerCase()) {
+                    return 1; // 'b' es menor, 'b' irá primero
+                }
+                return 0; // Son iguales
+            });
+
+            setUsersRestaurantes(sortedUsers); // Actualizar el estado con los usuarios ordenados
+            setLoading(false);
+            console.log('Usuarios de restaurantes cargados y ordenados:', sortedUsers);
+        })
+        .catch((error) => {
+            console.error('Error al cargar usuarios de restaurantes:', error);
+            setError('Error al cargar los usuarios de restaurantes');
+        });
+}, []);
+
 
     // Funciones para gestionar restaurantes
-    const handleActivate = async (id) => {
-        try {
-            const response = await axios.patch(`${server}/restaurantes/${id}`, {
-                activo: 1,
+    const handleActivate = (id) => {
+        axios
+            .delete(`${server}/restaurantes/${id}`, {
+                data: { activo: 1 },
+                headers: headers,
+            })
+            .then((response) => {
+                if (response.status === 200) {
+                    setRestaurante(
+                        restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 1 } : rest))
+                    );
+                }
+            })
+            .catch((error) => {
+                console.error('Error al activar el restaurante:', error);
+                alert('Error al activar el restaurante');
             });
-            if (response.status === 200) {
-                setRestaurante(
-                    restaurante.map((rest) =>
-                        rest.id === id ? { ...rest, activo: 1 } : rest
-                    )
-                );
-            }
-        } catch (error) {
-            console.error("Error al activar el restaurante:", error);
-            alert("Error al activar el restaurante");
-        }
     };
 
-    const handleDeactivate = async (id) => {
-        try {
-            const response = await axios.patch(`${server}/restaurantes/${id}`, {
-                activo: 0,
+    const handleDeactivate = (id) => {
+        axios
+            .delete(`${server}/restaurantes/${id}`, {
+                data: { activo: 0 },
+                headers: headers,
+            })
+            .then((response) => {
+                if (response.status === 200) {
+                    setRestaurante(
+                        restaurante.map((rest) => (rest.id === id ? { ...rest, activo: 0 } : rest))
+                    );
+                }
+            })
+            .catch((error) => {
+                console.error('Error al desactivar el restaurante:', error);
+                alert('Error al desactivar el restaurante');
             });
-            if (response.status === 200) {
-                setRestaurante(
-                    restaurante.map((rest) =>
-                        rest.id === id ? { ...rest, activo: 0 } : rest
-                    )
-                );
-            }
-        } catch (error) {
-            console.error("Error al desactivar el restaurante:", error);
-            alert("Error al desactivar el restaurante");
-        }
     };
 
     // Manejo del formulario
@@ -92,46 +109,46 @@ const AdminRestaurantes = () => {
         });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
 
-        try {
-            // Crear nuevo restaurante
-            const response = await axios.post(
-                `${server}/restaurantes`,
-                formData
-            );
-            if (response.status === 201 || response.status === 200) {
-                setRestaurante([...restaurante, response.data]);
-                alert("Restaurante creado correctamente");
-            }
-
-            resetForm();
-            setShowModal(false);
-        } catch (error) {
-            console.error("Error al guardar el restaurante:", error);
-            alert("Error al guardar el restaurante");
-        }
+        axios
+            .post(`${server}/restaurantes`, formData, { headers })
+            .then((response) => {
+                if (response.status === 201 || response.status === 200) {
+                    axios
+                        .get(`${server}/restaurantes`, { headers })
+                        .then((res) => {
+                            setRestaurante(res.data);
+                            alert('Restaurante creado correctamente');
+                        })
+                    
+                }
+                resetForm();
+                setShowModal(false);
+            })
+            .catch((error) => {
+                console.error('Error al guardar el restaurante:', error);
+                alert('Error al guardar el restaurante');
+            });
     };
 
     const resetForm = () => {
         setFormData({
-            nombre_sucursal: "",
-            direccion: "",
-            latitud: "",
-            longitud: "",
-            rating_google: "0",
+            nombre_sucursal: '',
+            direccion: '',
+            latitud: '',
+            longitud: '',
+            rating_google: '0',
         });
     };
 
     return (
         <>
-            {userLogin.rol === "admin" ? (
+            {userLogin.rol === 'admin' ? (
                 <div className="container mx-auto p-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">
-                            Administración de Restaurantes
-                        </h2>
+                        <h2 className="text-xl font-bold">Administración de Restaurantes</h2>
                         <button
                             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                             onClick={() => {
@@ -152,24 +169,12 @@ const AdminRestaurantes = () => {
                             <table className="min-w-full bg-white border">
                                 <thead className="bg-gray-100">
                                     <tr>
-                                        <th className="py-2 px-4 border-b">
-                                            ID
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Nombre
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Dirección
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Coordenadas
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Rating
-                                        </th>
-                                        <th className="py-2 px-4 border-b">
-                                            Estado
-                                        </th>
+                                        <th className="py-2 px-4 border-b">ID</th>
+                                        <th className="py-2 px-4 border-b">Nombre</th>
+                                        <th className="py-2 px-4 border-b">Dirección</th>
+                                        <th className="py-2 px-4 border-b">Coordenadas</th>
+                                        <th className="py-2 px-4 border-b">Rating</th>
+                                        <th className="py-2 px-4 border-b">Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -188,32 +193,21 @@ const AdminRestaurantes = () => {
                                                 {restaurante.direccion}
                                             </td>
                                             <td className="py-2 px-4 text-center">
-                                                {restaurante.latitud},{" "}
-                                                {restaurante.longitud}
+                                                {restaurante.latitud}, {restaurante.longitud}
                                             </td>
                                             <td className="py-2 px-4 text-center">
-                                                {"★".repeat(
-                                                    Math.floor(
-                                                        restaurante.rating_google
-                                                    )
-                                                ) +
-                                                    "☆".repeat(
-                                                        5 -
-                                                            Math.floor(
-                                                                restaurante.rating_google
-                                                            )
+                                                {'★'.repeat(Math.floor(restaurante.rating_google)) +
+                                                    '☆'.repeat(
+                                                        5 - Math.floor(restaurante.rating_google)
                                                     )}
                                             </td>
                                             <td className="py-2 px-4 text-center">
                                                 <div className="flex justify-center">
-                                                    {restaurante.activo ===
-                                                    0 ? (
+                                                    {restaurante.activo === 0 ? (
                                                         <button
                                                             className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
                                                             onClick={() =>
-                                                                handleActivate(
-                                                                    restaurante.id
-                                                                )
+                                                                handleActivate(restaurante.id)
                                                             }
                                                         >
                                                             Activar
@@ -222,9 +216,7 @@ const AdminRestaurantes = () => {
                                                         <button
                                                             className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                                             onClick={() =>
-                                                                handleDeactivate(
-                                                                    restaurante.id
-                                                                )
+                                                                handleDeactivate(restaurante.id)
                                                             }
                                                         >
                                                             Desactivar
@@ -320,6 +312,24 @@ const AdminRestaurantes = () => {
                                             step="0.1"
                                             required
                                         />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium mb-1">
+                                            Usuario Responsable
+                                        </label>
+                                        <select
+                                            name="admin_restaurante_id"
+                                            onChange={handleChange}
+                                            className="w-full p-2 border rounded"
+                                            required
+                                        >
+                                            {usersRestaurantes.map((user) => (
+                                                <option key={user.id} value={user.id}>
+                                                    {user.nombre} {user.apellido}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     <div className="flex justify-end gap-2">
