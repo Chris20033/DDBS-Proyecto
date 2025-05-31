@@ -23,32 +23,43 @@ const AdminRestaurantes = () => {
     });
 
     // Cargar restaurantes al iniciar
-    useEffect(() => {
-        axios
-            .get(`${server}/restaurantes`, { headers })
-            .then((response) => {
-                if (response.status !== 200) {
-                    throw new Error('Error al cargar los restaurantes');
+useEffect(() => {
+    axios
+        .get(`${server}/restaurantes`, { headers })
+        .then((response) => {
+            if (response.status !== 200) {
+                throw new Error('Error al cargar los restaurantes');
+            }
+            setRestaurante(response.data);
+        })
+        .catch((error) => {
+            console.error('Error al cargar restaurantes:', error);
+        });
+
+    axios
+        .get(`${server}/usuariosrestaurantes`, { headers })
+        .then((res) => {
+            // Ordenar los usuarios de restaurantes
+            const sortedUsers = res.data.sort((a, b) => {
+                if (a.nombre.toLowerCase() < b.nombre.toLowerCase()) {
+                    return -1; // 'a' es menor, 'a' irá primero
                 }
-                setRestaurante(response.data);
-            })
-            .catch((error) => {
-                console.error('Error al cargar usuarios:', error);
+                if (a.nombre.toLowerCase() > b.nombre.toLowerCase()) {
+                    return 1; // 'b' es menor, 'b' irá primero
+                }
+                return 0; // Son iguales
             });
 
-        axios
-            .get(`${server}/usuariosrestaurantes`, { headers })
-            .then((res) => {
-                setUsersRestaurantes(res.data);
-                setLoading(false);
-                console.log('Usuarios de restaurantes cargados:', res.data);
-            })
-            .catch((error) => {
-                console.error('Error al cargar usuarios de restaurantes:', error);
-                setError('Error al cargar los usuarios de restaurantes');
-            });
+            setUsersRestaurantes(sortedUsers); // Actualizar el estado con los usuarios ordenados
+            setLoading(false);
+            console.log('Usuarios de restaurantes cargados y ordenados:', sortedUsers);
+        })
+        .catch((error) => {
+            console.error('Error al cargar usuarios de restaurantes:', error);
+            setError('Error al cargar los usuarios de restaurantes');
+        });
+}, []);
 
-    }, []);
 
     // Funciones para gestionar restaurantes
     const handleActivate = (id) => {
@@ -105,8 +116,13 @@ const AdminRestaurantes = () => {
             .post(`${server}/restaurantes`, formData, { headers })
             .then((response) => {
                 if (response.status === 201 || response.status === 200) {
-                    setRestaurante([...restaurante, response.data]);
-                    alert('Restaurante creado correctamente');
+                    axios
+                        .get(`${server}/restaurantes`, { headers })
+                        .then((res) => {
+                            setRestaurante(res.data);
+                            alert('Restaurante creado correctamente');
+                        })
+                    
                 }
                 resetForm();
                 setShowModal(false);
@@ -303,7 +319,7 @@ const AdminRestaurantes = () => {
                                             Usuario Responsable
                                         </label>
                                         <select
-                                            name="admin_restaurante"
+                                            name="admin_restaurante_id"
                                             onChange={handleChange}
                                             className="w-full p-2 border rounded"
                                             required

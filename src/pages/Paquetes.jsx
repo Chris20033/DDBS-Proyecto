@@ -24,8 +24,10 @@ const Paquetes = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedDireccion, setSelectedDireccion] = useState(null);
     const [selectedPago, setSelectedPago] = useState(null);
+    const [tipoEntrega, setTipoEntrega] = useState('domicilio'); // Asignar valor por defecto
     const [showModal, setShowModal] = useState(false);
     const [currentPaquete, setCurrentPaquete] = useState(null);
+    const [imageUrls, setImageUrls] = useState({});
 
     useEffect(() => {
         // Verifica si el usuario está logueado y tiene direcciones y métodos de pago
@@ -34,6 +36,14 @@ const Paquetes = () => {
             // Establecer valores por defecto para dirección y método de pago
             if (direcciones.length > 0) setSelectedDireccion(direcciones[0].id);
             if (metodoPago.length > 0) setSelectedPago(metodoPago[0].id);
+
+            if (paquetes.length > 0) {
+                paquetes.forEach((paquete) => {
+                    if (paquete.imagen) {
+                        fetchImage(`${server}${paquete.imagen}`, paquete.id);
+                    }
+                });
+            }
         }
     }, [login, direcciones, metodoPago]);
 
@@ -104,8 +114,8 @@ const Paquetes = () => {
             fecha_pedido: fechaFormateada,
             direccion_id: selectedDireccion,
             metodo_pago_id: selectedPago,
-            tipo_entrega: 'domicilio',
-            total: currentPaquete.precio * cantidad, // Multiplicar por cantidad
+            tipo_entrega: tipoEntrega,
+            total: currentPaquete.precio * cantidad,
             estatus: 'En proceso',
         };
 
@@ -178,6 +188,30 @@ const Paquetes = () => {
             })
             .finally(() => {
                 setIsProcessing(false);
+            });
+    };
+
+    const fetchImage = (imageUrl, id) => {
+        fetch(imageUrl, {
+            method: 'GET',
+            headers: {
+                'ngrok-skip-browser-warning': 'true',
+            },
+        })
+            .then((response) => response.blob())
+            .then((imageBlob) => {
+                const imageObjectURL = URL.createObjectURL(imageBlob);
+                setImageUrls((prevState) => ({
+                    ...prevState,
+                    [id]: imageObjectURL,
+                }));
+            })
+            .catch((error) => {
+                console.error('Error al cargar la imagen:', error);
+                setImageUrls((prevState) => ({
+                    ...prevState,
+                    [id]: '/default-image.jpg', // Imagen por defecto si ocurre un error
+                }));
             });
     };
 
@@ -267,7 +301,7 @@ const Paquetes = () => {
                     paquetes.map((paquete) => (
                         <Products
                             key={paquete.id}
-                            paquete={paquete}
+                             paquete={{ ...paquete, imagen: imageUrls[paquete.id] || `${server}${paquete.imagen}` }}
                             formatDate={formatDate}
                             getRestauranteName={getRestauranteName}
                             handleCompra={iniciarCompra}
@@ -302,7 +336,6 @@ const Paquetes = () => {
                                     {currentPaquete.cantidad || 1}
                                 </p>
                                 <p>
-                                    <hr />
                                     <span className="font-medium">TOTAL:</span> $
                                     {(
                                         (currentPaquete.cantidad || 1) * currentPaquete.precio
@@ -325,6 +358,17 @@ const Paquetes = () => {
                                         {dir.calle} {dir.numero}, {dir.colonia}, {dir.ciudad}
                                     </option>
                                 ))}
+                            </select>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block font-semibold mb-2">Tipo de entrega:</label>
+                            <select
+                                className="w-full p-2 border rounder-md"
+                                onChange={(e) => setTipoEntrega(e.target.value)}
+                            >
+                                <option value="domicilio">Domicilio</option>
+                                <option value="pickup">Recoger en restaurante</option>
                             </select>
                         </div>
 

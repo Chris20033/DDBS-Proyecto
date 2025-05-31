@@ -35,9 +35,7 @@ const Administrador = () => {
 
     const optionsAdmin = [
         { id: 1, nombre: 'Administrar Usuarios' },
-        { id: 2, nombre: 'Administrar Pedidos' },
-        { id: 3, nombre: 'Administrar Paquetes' },
-        { id: 4, nombre: 'Administrar Restaurantes' },
+        { id: 2, nombre: 'Administrar Restaurantes' },
     ];
 
     const optionRestaurante = [

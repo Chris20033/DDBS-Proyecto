@@ -19,8 +19,6 @@ import RestPedidos from '../pages/admin-restaurant/RestPedidos';
 import RestPaquetes from '../pages/admin-restaurant/RestPaquetes';
 
 //admin pages
-import AdminPaquetes from "../pages/admin/AdminPaquetes";
-import AdminPedidos from "../pages/admin/AdminPedidos";
 import AdminRestaurantes from "../pages/admin/AdminRestaurantes";
 import AdminUsuarios from "../pages/admin/AdminUsuarios";
 
@@ -39,8 +37,6 @@ export const router = createBrowserRouter([
                 {path: 'restaurante/pedidos', element: <RestPedidos/>},
                 {path: 'restaurante/paquetes', element: <RestPaquetes/>},
                 {path: 'admin/usuarios', element: <AdminUsuarios />},
-                {path: 'admin/pedidos', element: <AdminPedidos />},
-                {path: 'admin/paquetes', element: <AdminPaquetes />},
                 {path: 'admin/restaurantes', element: <AdminRestaurantes />},
             ]},
             { path: 'registro', element: <Registro /> },
