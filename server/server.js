@@ -40,6 +40,7 @@ const db = mysql.createConnection({
   database: 'proyecto'
 });
 
+
 // Connect to MySQL
 db.connect((err) => {
   if (err) {
@@ -567,6 +568,82 @@ app.get('/pedidos/usuario/:userId', (req, res) => {
     });
 });
 
+app.get('/pedidos/restaurante/:restauranteId', (req, res) => {
+    const restauranteId = req.params.restauranteId;
+
+    if (!restauranteId) {
+        return res.status(400).send('Se requiere ID del restaurante');
+    }
+
+    // Consulta principal: Obtener los pedidos asociados a los paquetes del restaurante
+    const query = `
+        SELECT 
+            p.id, p.fecha_pedido, p.estatus, p.total, p.tipo_entrega,
+            d.calle, d.numero, d.colonia, d.ciudad, d.estado, d.codigo_postal,
+            mp.tipo AS tipo_pago, p.tipo_entrega
+        FROM PEDIDO p
+        JOIN DIRECCION d ON p.direccion_id = d.id
+        JOIN METODO_PAGO mp ON p.metodo_pago_id = mp.id
+        JOIN DETALLE_PEDIDO dp ON p.id = dp.pedido_id
+        JOIN PAQUETE paq ON dp.paquete_id = paq.id
+        WHERE paq.restaurante_id = ?  -- Filtrar por restaurante a través de la tabla PAQUETE
+        ORDER BY p.fecha_pedido DESC
+    `;
+
+    db.query(query, [restauranteId], (err, pedidosResults) => {
+        if (err) {
+            console.error('Error al obtener pedidos del restaurante:', err);
+            res.status(500).send('Error al obtener pedidos del restaurante');
+            return;
+        }
+
+        // Si no hay pedidos, devolver array vacío
+        if (pedidosResults.length === 0) {
+            return res.json([]);
+        }
+
+        // Contador para mantener el seguimiento de pedidos procesados
+        let pedidosProcesados = 0;
+        const pedidosCompletos = [];
+
+        // Para cada pedido, obtener sus detalles
+        pedidosResults.forEach((pedido) => {
+            const queryDetalles = `
+                SELECT 
+                    dp.id, dp.cantidad, dp.precio_unitario,
+                    paq.id AS paquete_id, paq.nombre_paquete, paq.descripcion, paq.imagen,
+                    r.nombre_sucursal AS restaurante
+                FROM DETALLE_PEDIDO dp
+                JOIN PAQUETE paq ON dp.paquete_id = paq.id
+                JOIN RESTAURANTE r ON paq.restaurante_id = r.id
+                WHERE dp.pedido_id = ?
+            `;
+
+            db.query(queryDetalles, [pedido.id], (errDetalles, detallesResults) => {
+                pedidosProcesados++;
+
+                if (errDetalles) {
+                    console.error(`Error al obtener detalles del pedido ${pedido.id}:`, errDetalles);
+                } else {
+                    // Añadir detalles al pedido correspondiente
+                    pedidosCompletos.push({
+                        ...pedido,
+                        detalles: detallesResults,
+                    });
+                }
+
+                // Cuando todos los pedidos han sido procesados, devolver resultado
+                if (pedidosProcesados === pedidosResults.length) {
+                    res.json(pedidosCompletos);
+                    console.log('Pedidos del restaurante obtenidos exitosamente');
+                }
+            });
+        });
+    });
+});
+
+
+
 // Crear un nuevo pedido
 app.post('/pedido', (req, res) => {
 
@@ -607,6 +684,32 @@ app.post('/pedido', (req, res) => {
         }
     );
 });
+
+app.put('/pedido/estado/:id', (req, res) => {
+    const pedidoId = req.params.id;
+    const { estatus } = req.body;
+
+    // Verificar que el estado sea válido
+    if (!estatus || !['Pendiente', 'En proceso', 'Confirmado'].includes(estatus)) {
+        return res.status(400).send('Estado inválido');
+    }
+
+    // Actualizar el estado del pedido
+    const query = 'UPDATE PEDIDO SET estatus = ? WHERE id = ?';
+    db.query(query, [estatus, pedidoId], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el estado del pedido:', err);
+            return res.status(500).send('Error al actualizar el estado del pedido');
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Pedido no encontrado');
+        }
+
+        res.status(200).send('Estado del pedido actualizado');
+    });
+});
+
 
 //DETALLE DE PEDIDO
 // Crear detalle de pedido

@@ -116,7 +116,7 @@ const Paquetes = () => {
             metodo_pago_id: selectedPago,
             tipo_entrega: tipoEntrega,
             total: currentPaquete.precio * cantidad,
-            estatus: 'En proceso',
+            estatus: 'pendiente',
         };
 
         axios

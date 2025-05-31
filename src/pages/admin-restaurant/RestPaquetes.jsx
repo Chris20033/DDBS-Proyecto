@@ -117,9 +117,6 @@ const RestPaquetes = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Crear un objeto FormData para enviar la imagen junto con los demás datos
-        const formDataToSend = new FormData();
-
         setFormData({
             ...formData,
             restaurante_id: selectedRestaurante, // Asegurarse de que el restaurante_id sea el del usuario logueado
