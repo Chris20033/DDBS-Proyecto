@@ -15,6 +15,7 @@ const Header = () => {
         setPedidos,
         server,
         setMetodoPago,
+        setDirecciones,
         asideOpen,
         setAsideOpen, // Añadir estos estados desde el AppContext
     } = useContext(AppContext);
@@ -131,6 +132,7 @@ const Header = () => {
                     axios
                         .get(`${server}/direccion/${id}`, { headers })
                         .then((direccionesResponse) => {
+                            setDirecciones(direccionesResponse.data);
                             console.log("Direcciones:", direccionesResponse.data);
                         })
                         .catch((error) => {

@@ -85,6 +85,16 @@ const Pedidos = () => {
                         Pendientes
                     </button>
                     <button
+                        onClick={() => setFiltroEstado("en proceso")}
+                        className={`py-1 md:py-2 px-2 md:px-4 text-xs md:text-sm font-medium ${
+                            filtroEstado === "en proceso"
+                                ? "bg-green-600 text-white"
+                                : "bg-white text-gray-700 hover:bg-gray-100"
+                        }`}
+                    >
+                        En Proceso
+                    </button>
+                    <button
                         onClick={() => setFiltroEstado("confirmado")}
                         className={`py-1 md:py-2 px-2 md:px-4 text-xs md:text-sm font-medium rounded-r-lg ${
                             filtroEstado === "confirmado"
