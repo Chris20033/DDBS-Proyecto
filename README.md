@@ -24,7 +24,7 @@ Para que este conectado todo entre sí primero haremos lo siguiente:
 - Con esto ya tendremos la BD en la VM, ya solo queda checar la IP de la VM para cambiarla en las siguientes lineas de los siguientes archivos
 
 * En el archivo `server/server.js` vamos a modificar desde la *linea 14*, ya que ahi es donde hace la conexion a la BD de la VM
-* En el archivo `src/context/AppContext.jsx` vamos a modificar la *linea 7*, vamos a dejar la estructura `const server = "http://IP_DE_LA_VM:3001";`, ya con eso pueden compilar ahora si el `server.js` y el proyecto de *React*
+* En el archivo `/.env` vamos a modificar la variable de entorno, vamos a dejar la estructura `VITE_API_URL=http://IP_DE_LA_MAQUINA_CON_NODEJS`, ya con eso pueden compilar ahora si el `server.js` y el proyecto de *React*
 
 # Comandos a usar para su funcionamiento
 
