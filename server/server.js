@@ -26,7 +26,7 @@ if (!fs.existsSync('uploads/')) {
 
 const app = express();
 const port = 3001;
-const IP = '192.168.100.206'
+const IP = '192.168.130.239'
 
 // Middleware
 app.use(cors());
